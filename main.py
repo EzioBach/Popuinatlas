@@ -1,7 +1,7 @@
 import streamlit as st
 from utils import load_data, prep_tables, prep_worldcities
 
-st.set_page_config(page_title="World Languages Dashboard", layout="wide")
+st.set_page_config(page_title="Popuinatlas - A Geo-Linguistic Atlas of Countries, Cities & Languages", layout="wide")
 
 # --- Personalization ---
 STUDENT_NAME = "Ezzat Bachour"
