@@ -1,85 +1,84 @@
 import streamlit as st
+import pandas as pd
 import plotly.express as px
+from utils import APP_NAME, APP_ICON, ensure_data_in_session, sidebar_brand, normalize_columns
 
-st.set_page_config(page_title="Language Explorer", layout="wide")
-st.title("🗣️ Language Explorer")
-st.caption("Pick a language → see where it is listed, official status, and prevalence (if available).")
+st.set_page_config(
+    page_title=f"{APP_NAME} — Language Explorer",
+    page_icon=APP_ICON,
+    layout="wide",
+)
 
-if not {"countries", "languages"}.issubset(st.session_state.keys()):
-    st.error("Open Home first (main.py).")
+ensure_data_in_session()
+sidebar_brand()
+
+langs = normalize_columns(st.session_state["languages"].copy())
+countries = normalize_columns(st.session_state["countries"].copy())
+
+st.title("🔎 Language Explorer")
+st.caption("Pick a language and see where it is spoken, whether it is official, and prevalence when available.")
+
+if "Language" not in langs.columns:
+    st.error(f"Missing 'Language' column. Found: {langs.columns.tolist()}")
     st.stop()
 
-countries = st.session_state["countries"]
-langs = st.session_state["languages"]
+langs["Language"] = langs["Language"].astype(str)
+langs["CountryCode"] = langs["CountryCode"].astype(str)
+countries["Code"] = countries["Code"].astype(str)
 
-all_langs = sorted(langs["Language"].dropna().unique().tolist())
-selected = st.selectbox("Choose a language", all_langs, key="language_selectbox")
+if "IsOfficial" in langs.columns:
+    langs["IsOfficial"] = langs["IsOfficial"].astype(str).str.upper()
+else:
+    langs["IsOfficial"] = "?"
 
-filtered = langs[langs["Language"] == selected].copy()
-merged = filtered.merge(
-    countries[["Code", "Name", "Continent", "Region", "Population"]],
-    left_on="CountryCode",
-    right_on="Code",
-    how="left",
-)
+if "Percentage" in langs.columns:
+    langs["Percentage"] = pd.to_numeric(langs["Percentage"], errors="coerce")
 
-k1, k2, k3 = st.columns(3)
-k1.metric("Countries where listed", f"{merged['Name'].nunique():,}")
-k2.metric("Official rows", f"{int((merged.get('IsOfficial','')=='T').sum()):,}")
-k3.metric("Avg % (if available)", f"{merged['Percentage'].mean():.2f}%" if "Percentage" in merged.columns and merged["Percentage"].notna().any() else "—")
+all_languages = sorted(langs["Language"].dropna().unique().tolist())
 
-st.divider()
-
-left, right = st.columns([1.25, 1])
+left, right = st.columns([1.2, 1])
 
 with left:
-    if "Percentage" in merged.columns and merged["Percentage"].notna().any():
-        fig = px.choropleth(
-            merged,
-            locations="Code",
-            locationmode="ISO-3",
-            color="Percentage",
-            hover_name="Name",
-            hover_data={"IsOfficial": True, "Percentage": True},
-            template="plotly_dark",
-            title=f"{selected} prevalence by country (%)",
-        )
-    else:
-        merged["_spoken"] = 1
-        fig = px.choropleth(
-            merged,
-            locations="Code",
-            locationmode="ISO-3",
-            color="_spoken",
-            hover_name="Name",
-            template="plotly_dark",
-            title=f"Countries where {selected} is listed",
-            range_color=(0, 1),
-        )
-        fig.update_layout(coloraxis_showscale=False)
-
-    fig.update_layout(margin=dict(l=0, r=0, t=60, b=0), height=520)
-    st.plotly_chart(fig, use_container_width=True)
+    q = st.text_input("Search language (optional)", value="")
+    candidates = [x for x in all_languages if q.lower() in x.lower()] if q else all_languages
+    selected_language = st.selectbox("Choose a language", candidates, key="lang_select")
 
 with right:
-    by_cont = merged.groupby("Continent").agg(
-        countries=("Code", "nunique"),
-        official=("IsOfficial", lambda s: int((s == "T").sum())),
-    ).reset_index().sort_values("countries", ascending=False)
+    only_official = st.toggle("Show only official occurrences", value=False)
 
-    fig2 = px.bar(by_cont, x="countries", y="Continent", orientation="h",
-                  template="plotly_dark", title="Countries by continent")
-    fig2.update_layout(margin=dict(l=0, r=0, t=60, b=0), yaxis={"categoryorder": "total ascending"})
-    st.plotly_chart(fig2, use_container_width=True)
+df = langs[langs["Language"] == selected_language].copy()
+if only_official:
+    df = df[df["IsOfficial"] == "T"].copy()
+
+merged = df.merge(countries, left_on="CountryCode", right_on="Code", how="left")
+
+# KPIs
+k1, k2, k3 = st.columns(3)
+k1.metric("Selected language", selected_language)
+k2.metric("Countries where found", f"{merged['Name'].nunique():,}" if "Name" in merged.columns else "—")
+k3.metric("Official entries", f"{(merged.get('IsOfficial','') == 'T').sum():,}")
 
 st.divider()
-st.subheader("Country list")
 
-cols = ["Name", "Continent", "Region", "IsOfficial"]
-if "Percentage" in merged.columns:
-    cols.append("Percentage")
+# Table + chart
+tabA, tabB = st.tabs(["📄 Table", "📊 Top prevalence"])  # official tabs :contentReference[oaicite:5]{index=5}
 
-st.dataframe(
-    merged[cols].sort_values("Percentage", ascending=False) if "Percentage" in merged.columns else merged[cols],
-    use_container_width=True
-)
+with tabA:
+    cols = []
+    for c in ["Name", "Continent", "Region", "IsOfficial", "Percentage"]:
+        if c in merged.columns:
+            cols.append(c)
+
+    out = merged[cols].copy() if cols else merged.copy()
+    if "Percentage" in out.columns:
+        out = out.sort_values("Percentage", ascending=False)
+    st.dataframe(out.reset_index(drop=True), use_container_width=True)
+
+with tabB:
+    if "Percentage" in merged.columns and merged["Percentage"].notna().any() and "Name" in merged.columns:
+        top = merged.sort_values("Percentage", ascending=False).head(20)
+        fig = px.bar(top, x="Name", y="Percentage", title=f"Top prevalence for: {selected_language}", template="plotly_dark")
+        fig.update_layout(margin=dict(l=0, r=0, t=50, b=0))
+        st.plotly_chart(fig, use_container_width=True)
+    else:
+        st.info("No prevalence (% column) available for this selection in the dataset.")
