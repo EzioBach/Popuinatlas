@@ -1,64 +1,63 @@
 import streamlit as st
+import pandas as pd
 import plotly.express as px
-from utils import build_country_language_stats
+from utils import APP_NAME, APP_ICON, ensure_data_in_session, sidebar_brand, normalize_columns
 
-st.set_page_config(page_title="Diversity Insights", layout="wide")
-st.title("📊 Diversity Insights")
-st.caption("Derived indicators: language counts + entropy index (if % exists) + relationships.")
+st.set_page_config(
+    page_title=f"{APP_NAME} — Diversity Insights",
+    page_icon=APP_ICON,
+    layout="wide",
+)
 
-if not {"countries", "languages"}.issubset(st.session_state.keys()):
-    st.error("Open Home first (main.py).")
-    st.stop()
+ensure_data_in_session()
+sidebar_brand()
 
-countries = st.session_state["countries"]
-langs = st.session_state["languages"]
+langs = normalize_columns(st.session_state["languages"].copy())
+countries = normalize_columns(st.session_state["countries"].copy())
 
-stats = build_country_language_stats(countries, langs)
+st.title("🌐 Diversity Insights")
+st.caption("Derived indicators from the country-language table (quick comparative view).")
 
-tab1, tab2 = st.tabs(["Maps", "Relationships"])
+langs["CountryCode"] = langs["CountryCode"].astype(str)
+langs["Language"] = langs["Language"].astype(str)
+if "IsOfficial" in langs.columns:
+    langs["IsOfficial"] = langs["IsOfficial"].astype(str).str.upper()
+else:
+    langs["IsOfficial"] = "?"
+
+# Count languages per country
+counts = (
+    langs.groupby("CountryCode")["Language"]
+    .nunique()
+    .reset_index(name="num_languages")
+)
+
+# Count official languages per country
+official_counts = (
+    langs[langs["IsOfficial"] == "T"]
+    .groupby("CountryCode")["Language"]
+    .nunique()
+    .reset_index(name="num_official_languages")
+)
+
+df = counts.merge(official_counts, on="CountryCode", how="left").fillna({"num_official_languages": 0})
+df = df.merge(countries, left_on="CountryCode", right_on="Code", how="left")
+
+k1, k2, k3 = st.columns(3)
+k1.metric("Countries (with language rows)", f"{df['CountryCode'].nunique():,}")
+k2.metric("Median languages/country", f"{df['num_languages'].median():.0f}")
+k3.metric("Max languages/country", f"{df['num_languages'].max():.0f}")
+
+st.divider()
+
+tab1, tab2 = st.tabs(["🏆 Top countries", "📊 Distribution"])
 
 with tab1:
-    c1, c2 = st.columns(2)
-
-    with c1:
-        fig = px.choropleth(
-            stats,
-            locations="Code",
-            locationmode="ISO-3",
-            color="n_languages",
-            hover_name="Name",
-            template="plotly_dark",
-            title="Number of languages per country",
-        )
-        fig.update_layout(margin=dict(l=0, r=0, t=60, b=0), height=520)
-        st.plotly_chart(fig, use_container_width=True)
-
-    with c2:
-        if stats["entropy"].notna().any():
-            fig2 = px.choropleth(
-                stats,
-                locations="Code",
-                locationmode="ISO-3",
-                color="entropy",
-                hover_name="Name",
-                template="plotly_dark",
-                title="Shannon entropy (from percentages)",
-            )
-            fig2.update_layout(margin=dict(l=0, r=0, t=60, b=0), height=520)
-            st.plotly_chart(fig2, use_container_width=True)
-        else:
-            st.info("Entropy is unavailable because Percentage is missing/empty in the language table.")
+    top = df.sort_values("num_languages", ascending=False).head(25)
+    show_cols = [c for c in ["Name", "Continent", "Region", "num_languages", "num_official_languages"] if c in top.columns]
+    st.dataframe(top[show_cols].reset_index(drop=True), use_container_width=True)
 
 with tab2:
-    df = stats.dropna(subset=["Population", "n_languages"]).copy()
-    fig3 = px.scatter(
-        df,
-        x="Population",
-        y="n_languages",
-        color="Continent",
-        hover_name="Name",
-        template="plotly_dark",
-        title="Population vs number of languages",
-    )
-    fig3.update_layout(margin=dict(l=0, r=0, t=60, b=0))
-    st.plotly_chart(fig3, use_container_width=True)
+    fig = px.histogram(df, x="num_languages", nbins=30, title="Distribution: number of languages per country", template="plotly_dark")
+    fig.update_layout(margin=dict(l=0, r=0, t=50, b=0))
+    st.plotly_chart(fig, use_container_width=True)
