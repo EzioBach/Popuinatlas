@@ -2,7 +2,12 @@ import streamlit as st
 import plotly.express as px
 from utils import inject_global_css, render_hero
 inject_global_css()
-render_hero("🧩", "This Page Title", "One-line description of what the user can do here.")
+render_hero(
+    "🗣️",
+    "Language Explorer",
+    "Pick a language to see where it’s listed, whether it’s official, and its prevalence (when available).",
+    pill="Languages",
+)
 
 
 st.set_page_config(page_title="Language Explorer", layout="wide")
