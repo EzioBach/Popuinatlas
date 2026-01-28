@@ -1,129 +1,119 @@
-import streamlit as st
+from __future__ import annotations
+
+import math
+from typing import Optional, Tuple
+
 import pandas as pd
-from pathlib import Path
-
-# =========================
-# Branding
-# =========================
-APP_NAME = "Popuinatlas"
-APP_SUBTITLE = "A Geo-Linguistic Atlas"
-APP_LINE = "Popuinatlas - A Geo linguistic app World Languages Dashboard"
+import streamlit as st
 
 
-# =========================
-# UI helpers (banner + CSS)
-# =========================
+# -----------------------------
+# Styling helpers
+# -----------------------------
 def inject_global_css() -> None:
     st.markdown(
         """
-        <style>
-        .block-container { padding-top: 1.2rem; padding-bottom: 2.5rem; max-width: 1200px; }
-        h1, h2, h3 { letter-spacing: -0.02em; }
-        p, li { line-height: 1.55; }
+<style>
+/* Slightly nicer spacing + typography */
+.block-container { padding-top: 1.2rem; padding-bottom: 2.5rem; max-width: 1200px; }
 
-        .hero {
-            border: 1px solid rgba(255,255,255,0.08);
-            background: linear-gradient(135deg, rgba(124,58,237,0.18), rgba(17,26,46,0.80));
-            border-radius: 18px;
-            padding: 18px 18px 14px 18px;
-            margin: 0.25rem 0 1.0rem 0;
-        }
-        .hero-title {
-            font-size: 2.0rem;
-            font-weight: 800;
-            margin: 0;
-        }
-        .hero-sub {
-            opacity: 0.92;
-            font-size: 1.05rem;
-            margin: 0.35rem 0 0 0;
-        }
-        .hero-line {
-            opacity: 0.75;
-            font-size: 0.95rem;
-            margin-top: 0.6rem;
-        }
-        .badge {
-            display: inline-block;
-            padding: 0.15rem 0.55rem;
-            border-radius: 999px;
-            border: 1px solid rgba(255,255,255,0.10);
-            background: rgba(255,255,255,0.06);
-            font-size: 0.85rem;
-            margin-right: 0.35rem;
-            margin-bottom: 0.25rem;
-        }
-        .card {
-            border: 1px solid rgba(255,255,255,0.08);
-            background: rgba(17,26,46,0.60);
-            border-radius: 16px;
-            padding: 14px 14px 10px 14px;
-            margin: 0.5rem 0;
-        }
-        .card h4 { margin: 0 0 0.4rem 0; }
-        .muted { opacity: 0.75; }
+/* Hero card */
+.pui-hero {
+  background: radial-gradient(1200px 500px at 20% 0%, rgba(120,90,255,.25), rgba(0,0,0,0)) ,
+              radial-gradient(900px 400px at 80% 10%, rgba(0,180,255,.18), rgba(0,0,0,0));
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 22px;
+  padding: 20px 22px;
+  margin-bottom: 18px;
+}
+.pui-hero-title {
+  font-size: 1.45rem;
+  font-weight: 700;
+  letter-spacing: .2px;
+  margin: 0 0 8px 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.pui-hero-sub {
+  margin: 0;
+  opacity: .85;
+  font-size: 1.02rem;
+  line-height: 1.35;
+}
+.pui-pill {
+  display: inline-block;
+  margin-top: 12px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: .9rem;
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(255,255,255,.04);
+  opacity: .95;
+}
 
-        div[data-testid="stDataFrame"] { border-radius: 14px; overflow: hidden; }
-        </style>
-        """,
+/* Make metric labels wrap instead of truncating */
+div[data-testid="stMetricLabel"] > div { white-space: normal !important; }
+
+/* Sidebar spacing */
+section[data-testid="stSidebar"] .block-container { padding-top: 1.2rem; }
+</style>
+""",
         unsafe_allow_html=True,
     )
 
 
-def render_hero(page_emoji: str, page_title: str, page_desc: str) -> None:
+def render_hero(icon: str, title: str, subtitle: str, pill: Optional[str] = None) -> None:
+    pill_html = f'<div class="pui-pill">{pill}</div>' if pill else ""
     st.markdown(
         f"""
-        <div class="hero">
-          <div class="hero-title">{page_emoji} {APP_NAME} <span class="muted">— {APP_SUBTITLE}</span></div>
-          <div class="hero-sub"><span class="badge">{page_title}</span> {page_desc}</div>
-          <div class="hero-line">{APP_LINE}</div>
-        </div>
-        """,
+<div class="pui-hero">
+  <div class="pui-hero-title">{icon} {title}</div>
+  <p class="pui-hero-sub">{subtitle}</p>
+  {pill_html}
+</div>
+""",
         unsafe_allow_html=True,
     )
 
 
-def card(title: str, body_html: str) -> None:
-    st.markdown(
-        f"""
-        <div class="card">
-          <h4>{title}</h4>
-          <div class="muted">{body_html}</div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
+# -----------------------------
+# Data loading (works on every page)
+# -----------------------------
+@st.cache_data(show_spinner=False)
+def _load_csvs() -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, Optional[pd.DataFrame]]:
+    cities = pd.read_csv("data/city.csv")
+    countries = pd.read_csv("data/country.csv")
+    langs = pd.read_csv("data/countrylanguage.csv")
+
+    worldcities = None
+    try:
+        worldcities = pd.read_csv("data/worldcities.csv")
+    except Exception:
+        worldcities = None
+
+    return cities, countries, langs, worldcities
 
 
-# =========================
-# Data loading (works from ANY page)
-# =========================
-@st.cache_data
-def _load_csvs(data_dir: str = "data"):
-    data_path = Path(data_dir)
-    cities = pd.read_csv(data_path / "city.csv")
-    countries = pd.read_csv(data_path / "country.csv")
-    languages = pd.read_csv(data_path / "countrylanguage.csv")
-    return cities, countries, languages
+def get_data() -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, Optional[pd.DataFrame]]:
+    """
+    Loads CSVs and ALWAYS ensures session_state contains:
+    - countries, cities, languages, worldcities (optional)
+    This removes the need for "Open Home first".
+    """
+    cities, countries, langs, worldcities = _load_csvs()
+
+    st.session_state["cities"] = cities
+    st.session_state["countries"] = countries
+    st.session_state["languages"] = langs
+    st.session_state["worldcities"] = worldcities
+
+    return cities, countries, langs, worldcities
 
 
-def get_data():
-    """Load and store data in session_state so any page works even if user lands directly there."""
-    if not {"cities", "countries", "languages"}.issubset(st.session_state.keys()):
-        cities, countries, languages = _load_csvs()
-        st.session_state["cities"] = cities
-        st.session_state["countries"] = countries
-        st.session_state["languages"] = languages
-    return (
-        st.session_state["cities"].copy(),
-        st.session_state["countries"].copy(),
-        st.session_state["languages"].copy(),
-    )
-
-
-# =========================
-# Cleaning + formatting helpers (your pages expect these!)
-# =========================
+# -----------------------------
+# Robust dataframe utilities
+# -----------------------------
 def normalize_columns(df: pd.DataFrame) -> pd.DataFrame:
     rename_map = {
         "Name_x": "Name",
@@ -142,104 +132,93 @@ def normalize_columns(df: pd.DataFrame) -> pd.DataFrame:
 def require_cols(df: pd.DataFrame, needed: list[str], name: str) -> None:
     missing = [c for c in needed if c not in df.columns]
     if missing:
-        raise ValueError(f"'{name}' missing columns: {missing}. Found: {df.columns.tolist()}")
+        st.error(f"'{name}' is missing columns: {missing}. Found: {df.columns.tolist()}")
+        st.stop()
 
 
 def format_int(x) -> str:
     try:
         if pd.isna(x):
             return "—"
-        return f"{int(float(x)):,}"
+        return f"{int(x):,}"
     except Exception:
         return "—"
 
 
-# =========================
-# Stats builders (your Overview/Diversity pages import these)
-# =========================
-def build_country_language_stats(languages: pd.DataFrame) -> pd.DataFrame:
-    """Per-country language diversity stats from countrylanguage.csv."""
-    df = languages.copy()
-    df = normalize_columns(df)
+# -----------------------------
+# Stats builders (used by Overview / Diversity)
+# -----------------------------
+def build_country_language_stats(countries: pd.DataFrame, langs: pd.DataFrame) -> pd.DataFrame:
+    countries = normalize_columns(countries).copy()
+    langs = normalize_columns(langs).copy()
 
-    require_cols(df, ["CountryCode", "Language"], "languages")
+    require_cols(countries, ["Code", "Name"], "countries")
+    require_cols(langs, ["CountryCode", "Language"], "languages")
 
-    df["CountryCode"] = df["CountryCode"].astype(str)
-    df["Language"] = df["Language"].astype(str)
+    countries["Code"] = countries["Code"].astype(str)
+    langs["CountryCode"] = langs["CountryCode"].astype(str)
 
-    if "IsOfficial" in df.columns:
-        df["IsOfficial"] = df["IsOfficial"].astype(str).str.upper()
-    else:
-        df["IsOfficial"] = "?"
-
-    if "Percentage" in df.columns:
-        df["Percentage"] = pd.to_numeric(df["Percentage"], errors="coerce")
-
-    # number of languages per country
-    lang_count = df.groupby("CountryCode")["Language"].nunique().rename("n_languages")
+    # language counts per country
+    n_lang = langs.groupby("CountryCode")["Language"].nunique().rename("n_languages")
 
     # official count
-    off_count = (
-        df[df["IsOfficial"] == "T"]
-        .groupby("CountryCode")["Language"]
-        .nunique()
-        .rename("n_official")
-    )
-
-    # top language by percentage (if available)
-    if "Percentage" in df.columns:
-        top = (
-            df.sort_values(["CountryCode", "Percentage"], ascending=[True, False])
-            .groupby("CountryCode")
-            .head(1)[["CountryCode", "Language", "Percentage"]]
-            .rename(columns={"Language": "top_language", "Percentage": "top_pct"})
-            .set_index("CountryCode")
-        )
+    if "IsOfficial" in langs.columns:
+        tmp = langs.copy()
+        tmp["IsOfficial"] = tmp["IsOfficial"].astype(str).str.upper()
+        n_off = tmp[tmp["IsOfficial"] == "T"].groupby("CountryCode")["Language"].nunique().rename("n_official")
     else:
-        top = pd.DataFrame(index=lang_count.index, columns=["top_language", "top_pct"])
+        n_off = pd.Series(dtype="float64", name="n_official")
 
-    out = pd.concat([lang_count, off_count, top], axis=1).fillna({"n_official": 0})
-    out["n_official"] = out["n_official"].astype(int)
-    return out.reset_index()
+    out = countries.merge(n_lang, left_on="Code", right_index=True, how="left")
+    out = out.merge(n_off, left_on="Code", right_index=True, how="left")
 
+    out["n_languages"] = out["n_languages"].fillna(0).astype(int)
+    out["n_official"] = out["n_official"].fillna(0).astype(int)
 
-def build_global_language_stats(languages: pd.DataFrame, countries: pd.DataFrame) -> pd.DataFrame:
-    """Per-language global stats: in how many countries it appears, official counts, avg percentage."""
-    df = languages.copy()
-    df = normalize_columns(df)
-    require_cols(df, ["CountryCode", "Language"], "languages")
+    # entropy if percentages exist
+    entropy = pd.Series(index=out["Code"], dtype="float64", name="entropy")
 
-    df["CountryCode"] = df["CountryCode"].astype(str)
-    df["Language"] = df["Language"].astype(str)
+    if "Percentage" in langs.columns:
+        tmp = langs[["CountryCode", "Language", "Percentage"]].copy()
+        tmp["Percentage"] = pd.to_numeric(tmp["Percentage"], errors="coerce")
+        tmp = tmp.dropna(subset=["Percentage"])
+        # convert to proportions (0..1)
+        tmp["p"] = tmp["Percentage"] / 100.0
+        tmp = tmp[(tmp["p"] > 0) & (tmp["p"] <= 1)]
 
-    if "IsOfficial" in df.columns:
-        df["IsOfficial"] = df["IsOfficial"].astype(str).str.upper()
-    else:
-        df["IsOfficial"] = "?"
+        def shannon(group: pd.DataFrame) -> float:
+            ps = group["p"].values
+            # normalize if sums are weird
+            s = ps.sum()
+            if s <= 0:
+                return float("nan")
+            ps = ps / s
+            return float(-sum(p * math.log(p, 2) for p in ps if p > 0))
 
-    if "Percentage" in df.columns:
-        df["Percentage"] = pd.to_numeric(df["Percentage"], errors="coerce")
+        H = tmp.groupby("CountryCode").apply(shannon)
+        entropy.update(H)
 
-    countries = normalize_columns(countries.copy())
-    if "Code" in countries.columns:
-        code_to_name = dict(zip(countries["Code"].astype(str), countries.get("Name", countries["Code"]).astype(str)))
-    else:
-        code_to_name = {}
+    out["entropy"] = out["Code"].map(entropy)
 
-    g = df.groupby("Language")
-    out = pd.DataFrame({
-        "Language": g.size().index,
-        "country_rows": g.size().values,
-        "countries_spoken": g["CountryCode"].nunique().values,
-        "countries_official": g.apply(lambda x: x.loc[x["IsOfficial"] == "T", "CountryCode"].nunique()).values,
-    })
+    # keep standard columns if present
+    for col in ["Continent", "Region", "Population"]:
+        if col in out.columns:
+            out[col] = out[col]
 
-    if "Percentage" in df.columns:
-        out["avg_pct"] = g["Percentage"].mean().values
-        out["max_pct"] = g["Percentage"].max().values
-    else:
-        out["avg_pct"] = pd.NA
-        out["max_pct"] = pd.NA
-
-    out = out.sort_values(["countries_spoken", "countries_official"], ascending=False).reset_index(drop=True)
     return out
+
+
+def build_global_language_stats(langs: pd.DataFrame, countries: pd.DataFrame) -> pd.DataFrame:
+    langs = normalize_columns(langs).copy()
+    countries = normalize_columns(countries).copy()
+
+    require_cols(langs, ["CountryCode", "Language"], "languages")
+    require_cols(countries, ["Code", "Name"], "countries")
+
+    langs["CountryCode"] = langs["CountryCode"].astype(str)
+    countries["Code"] = countries["Code"].astype(str)
+
+    # count how many countries each language appears in
+    g = langs.groupby("Language")["CountryCode"].nunique().rename("countries_spoken").reset_index()
+    g = g.sort_values("countries_spoken", ascending=False).reset_index(drop=True)
+    return g
