@@ -1,5 +1,4 @@
 import streamlit as st
-import pandas as pd
 
 from utils import inject_global_css, render_hero, get_data
 
@@ -12,15 +11,15 @@ st.set_page_config(
 inject_global_css()
 render_hero(
     "🧭",
-    "Popuinatlas",
+    "Popuinatlas — A Geo-Linguistic Atlas",
     "Explore countries, cities, and language distributions through interactive maps + relational analytics.",
     pill="Geo-Linguistic Dashboard",
 )
 
-# Load data (and keep in session_state automatically)
+# Load data (and populate session_state for all pages)
 cities, countries, langs, worldcities = get_data()
 
-# ---- Metadata (you can edit these) ----
+# ---- Metadata ----
 STUDENT_NAME = "Ezzat Bachour"
 MAJOR = "B.Sc. Psychology"
 UNIVERSITY = "Leuphana University Lüneburg"
@@ -34,9 +33,10 @@ with left:
     st.subheader("What this app is")
     st.markdown(
         """
-- **Country drill-downs**: borders, region context, population
-- **Language structure**: official vs. non-official + prevalence (when available)
-- **City patterns**: urban concentration + city distribution mapping (optional lat/lon layer)
+- **Country drill-downs**: borders, region context, population, top cities  
+- **Language structure**: official vs. non-official + prevalence (when available)  
+- **Global views**: diversity maps, top languages, relationships with population  
+- **Optional city map**: lat/lon visualization if `worldcities.csv` exists  
         """
     )
 
@@ -44,11 +44,11 @@ with left:
     st.markdown(
         """
 Use the **sidebar** to move between pages:
-- 🌍 Overview → global KPIs and high-signal maps  
-- 🧭 Country Explorer → click/select a country and drill down  
-- 🗣️ Language Explorer → pick a language and see where it appears  
-- 📊 Diversity Insights → diversity metrics (incl. entropy if % exists)  
-- 🏙️ City Analytics → city map + population analytics  
+- 🌍 **Overview** → global KPIs + high-signal maps  
+- 🧭 **Country Explorer** → click/select a country and drill down  
+- 🗣️ **Language Explorer** → pick a language and see where it appears  
+- 📊 **Diversity Insights** → diversity metrics (incl. entropy if % exists)  
+- 🏙️ **City Analytics** → city map + population analytics  
         """
     )
 
@@ -65,10 +65,11 @@ with right:
     )
 
     st.subheader("📦 Dataset snapshot")
-    c1, c2, c3 = st.columns(3)
+    c1, c2, c3, c4 = st.columns(4)
     c1.metric("Countries", f"{countries.shape[0]:,}")
     c2.metric("Cities", f"{cities.shape[0]:,}")
     c3.metric("Language rows", f"{langs.shape[0]:,}")
+    c4.metric("Worldcities", "✅" if worldcities is not None else "—")
 
 st.divider()
 
