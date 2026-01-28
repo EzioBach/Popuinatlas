@@ -1,7 +1,8 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-
+from utils import get_data
+cities, countries, langs = get_data()
 st.set_page_config(page_title="Country Explorer — Popuinatlas", page_icon="🧭", layout="wide")
 
 from utils import inject_global_css, render_hero, get_data, normalize_columns, require_cols, format_int
