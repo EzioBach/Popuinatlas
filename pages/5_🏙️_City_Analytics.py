@@ -5,7 +5,6 @@ import plotly.express as px
 from utils import inject_global_css, render_hero
 
 
-# MUST be first Streamlit command
 st.set_page_config(page_title="City Analytics + City Map — Popuinatlas", page_icon="🏙️", layout="wide")
 
 inject_global_css()
@@ -16,9 +15,7 @@ render_hero(
     pill="Cities",
 )
 
-# -------------------------
-# Safety: require loaded data
-# -------------------------
+
 required = {"countries", "cities", "languages", "worldcities"}
 missing = [k for k in required if k not in st.session_state]
 if missing:
@@ -27,14 +24,12 @@ if missing:
 
 countries = st.session_state["countries"].copy()
 cities_mysql = st.session_state["cities"].copy()
-worldcities = st.session_state["worldcities"]  # can be None depending on your loader
+worldcities = st.session_state["worldcities"]  
 
 tab_map, tab_analytics = st.tabs(["🗺️ City Map (Lat/Lon)", "📈 City Analytics (Population)"])
 
 
-# =========================================================
-# TAB 1: City Map (worldcities.csv)
-# =========================================================
+
 with tab_map:
     if worldcities is None or (isinstance(worldcities, pd.DataFrame) and worldcities.empty):
         st.error("worldcities.csv is missing or empty. Put it at `data/worldcities.csv` and redeploy/restart.")
@@ -42,10 +37,8 @@ with tab_map:
 
     wc = worldcities.copy()
 
-    # Normalize columns to lowercase for robust access
     wc.columns = [str(c).strip() for c in wc.columns]
 
-    # Detect lat & lon columns (support 'lng' or 'lon')
     lat_col = None
     lon_col = None
 
@@ -66,7 +59,6 @@ with tab_map:
         )
         st.stop()
 
-    # Detect common columns
     iso3_col = "iso3" if "iso3" in wc.columns else None
     pop_col = "population" if "population" in wc.columns else None
 
@@ -79,7 +71,6 @@ with tab_map:
     admin_col = "admin_name" if "admin_name" in wc.columns else None
     country_col = "country" if "country" in wc.columns else None
 
-    # Controls
     c1, c2, c3 = st.columns([1.1, 1, 1])
     with c1:
         min_pop = st.number_input("Minimum population", value=200000, step=50000)
@@ -88,7 +79,6 @@ with tab_map:
     with c3:
         projection = st.selectbox("Projection", ["natural earth", "equirectangular", "orthographic"], index=0)
 
-    # Optional country filter using countries table (ISO-3 Codes)
     chosen_iso3 = None
     if "Code" in countries.columns and "Name" in countries.columns and iso3_col:
         cdf = countries.dropna(subset=["Code", "Name"]).copy()
@@ -102,7 +92,6 @@ with tab_map:
     else:
         st.caption("Country filter is disabled (missing countries Code/Name or worldcities iso3 column).")
 
-    # Clean df
     df = wc.dropna(subset=[lat_col, lon_col]).copy()
     df[lat_col] = pd.to_numeric(df[lat_col], errors="coerce")
     df[lon_col] = pd.to_numeric(df[lon_col], errors="coerce")
@@ -116,7 +105,6 @@ with tab_map:
         df[iso3_col] = df[iso3_col].astype(str).str.strip()
         df = df[df[iso3_col] == chosen_iso3]
 
-    # Performance cap
     if pop_col and df[pop_col].notna().any():
         df = df.sort_values(pop_col, ascending=False).head(max_points)
     else:
@@ -158,9 +146,7 @@ with tab_map:
     st.plotly_chart(fig, use_container_width=True)
 
 
-# =========================================================
-# TAB 2: City Analytics (MySQL city.csv)
-# =========================================================
+
 with tab_analytics:
     st.subheader("📈 Urban concentration patterns (city.csv)")
     st.caption("Analytics use the MySQL world dataset's city table (population, rankings, concentration).")
@@ -168,7 +154,6 @@ with tab_analytics:
     cities = cities_mysql.copy()
     ctry = countries.copy()
 
-    # Defensive checks
     needed_cols = {"CountryCode", "Population"}
     if not needed_cols.issubset(set(cities.columns)):
         st.error(
@@ -192,7 +177,6 @@ with tab_analytics:
     if sel_cont != "All" and "Continent" in filtered_countries.columns:
         filtered_countries = filtered_countries[filtered_countries["Continent"] == sel_cont]
 
-    # Prepare country labels
     if not {"Code", "Name"}.issubset(set(filtered_countries.columns)):
         st.error("Countries table must include 'Code' and 'Name'.")
         st.stop()
