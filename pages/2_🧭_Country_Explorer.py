@@ -4,12 +4,18 @@ import plotly.express as px
 from utils import format_int
 from utils import inject_global_css, render_hero
 inject_global_css()
-render_hero("🧩", "This Page Title", "One-line description of what the user can do here.")
+render_hero(
+    "🧭",
+    "Country Explorer",
+    "Double-click a country on the map (or use the sidebar) to switch. Single-click only highlights.",
+    pill="Countries",
+)
+
 
 
 st.set_page_config(page_title="Country Explorer", layout="wide")
 st.title("🧭 Country Explorer")
-st.caption("Select from the sidebar or click a country on the map. The sidebar stays synced.")
+st.caption("Tip: **Double-click** a country on the map to select it. Single-click only highlights. You can also use the sidebar.")
 
 # -------------------------
 # Safety
