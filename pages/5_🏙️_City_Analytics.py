@@ -12,7 +12,7 @@ inject_global_css()
 render_hero(
     "🏙️",
     "City Analytics + City Map",
-    "Lat/lon map (worldcities.csv) + population analytics (MySQL city.csv).",
+    "Lat/lon map - population analytics",
     pill="Cities",
 )
 
