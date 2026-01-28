@@ -1,270 +1,165 @@
-from __future__ import annotations
-
-import math
-from pathlib import Path
-from typing import Optional, Tuple
-
-import pandas as pd
 import streamlit as st
+import pandas as pd
+import plotly.express as px
 
+from utils import inject_global_css, render_hero, get_data
 
-# ----------------------------
-# Paths
-# ----------------------------
-DATA_DIR = Path(__file__).parent / "data"
-CITY_CSV = DATA_DIR / "city.csv"
-COUNTRY_CSV = DATA_DIR / "country.csv"
-LANG_CSV = DATA_DIR / "countrylanguage.csv"
-WORLDCITIES_CSV = DATA_DIR / "worldcities.csv"  # optional
+st.set_page_config(page_title="City Analytics — Popuinatlas", page_icon="🏙️", layout="wide")
+inject_global_css()
+render_hero("🏙️", "City Analytics + City Map", "Lat/lon map (worldcities.csv) + population analytics (MySQL city.csv).", pill="Cities")
 
+countries_cities, countries, langs, worldcities = get_data()
+cities_mysql = countries_cities.copy()
+countries = countries.copy()
 
-# ----------------------------
-# Styling
-# ----------------------------
-def inject_global_css() -> None:
-    st.markdown(
-        """
-<style>
-/* Reduce top padding a bit */
-.block-container { padding-top: 1.2rem; padding-bottom: 2rem; }
+tab_map, tab_analytics = st.tabs(["🗺️ City Map (Lat/Lon)", "📈 City Analytics (Population)"])
 
-/* Make charts/cards feel cleaner */
-[data-testid="stMetric"] { 
-  background: rgba(255,255,255,0.03);
-  border: 1px solid rgba(255,255,255,0.06);
-  padding: 14px 14px;
-  border-radius: 16px;
-}
-
-/* Dataframes */
-[data-testid="stDataFrame"] {
-  border-radius: 16px;
-  overflow: hidden;
-}
-
-/* Hero container */
-.pop-hero {
-  border-radius: 22px;
-  padding: 22px 22px;
-  border: 1px solid rgba(255,255,255,0.08);
-  background: radial-gradient(1200px 500px at 15% 10%, rgba(120,90,255,0.35), transparent 60%),
-              radial-gradient(900px 500px at 85% 0%, rgba(0,200,255,0.20), transparent 55%),
-              rgba(255,255,255,0.03);
-  box-shadow: 0 12px 45px rgba(0,0,0,0.35);
-}
-
-.pop-hero .appname {
-  font-size: 18px;
-  opacity: 0.9;
-  letter-spacing: 0.2px;
-  margin-bottom: 6px;
-}
-
-.pop-hero .pagetitle {
-  font-size: 44px;
-  font-weight: 800;
-  margin: 4px 0 4px 0;
-  line-height: 1.05;
-}
-
-.pop-hero .subtitle {
-  font-size: 16px;
-  opacity: 0.85;
-  margin-top: 6px;
-}
-
-.pop-pill {
-  display: inline-block;
-  padding: 6px 10px;
-  border-radius: 999px;
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.08);
-  font-size: 13px;
-  opacity: 0.95;
-  margin-right: 10px;
-}
-
-.pop-muted { opacity: 0.75; }
-</style>
-        """,
-        unsafe_allow_html=True,
-    )
-
-
-def render_hero(icon: str, page_title: str, subtitle: str, pill: str = "World Geo-Linguistic Dashboard") -> None:
-    st.markdown(
-        f"""
-<div class="pop-hero">
-  <div class="appname">🧭 <b>Popuinatlas</b> — <span class="pop-muted">A Geo-Linguistic Atlas</span></div>
-  <div>
-    <span class="pop-pill">{pill}</span>
-  </div>
-  <div class="pagetitle">{icon} {page_title}</div>
-  <div class="subtitle">{subtitle}</div>
-  <div class="pop-muted" style="margin-top:10px;">Popuinatlas — A Geo-linguistic app • World languages, countries, and cities in one interactive atlas.</div>
-</div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-
-# ----------------------------
-# Data loading
-# ----------------------------
-@st.cache_data(show_spinner=False)
-def _read_csv(path: Path) -> pd.DataFrame:
-    return pd.read_csv(path)
-
-
-def normalize_columns(df: pd.DataFrame) -> pd.DataFrame:
-    """Fix common merge artifacts like Name_x/Name_y etc."""
-    rename_map = {
-        "Name_x": "Name",
-        "Name_y": "Name",
-        "Code_x": "Code",
-        "Code_y": "Code",
-        "CountryCode_x": "CountryCode",
-        "CountryCode_y": "CountryCode",
-    }
-    for old, new in rename_map.items():
-        if old in df.columns and new not in df.columns:
-            df = df.rename(columns={old: new})
-    return df
-
-
-def require_cols(df: pd.DataFrame, needed: list[str], name: str) -> None:
-    missing = [c for c in needed if c not in df.columns]
-    if missing:
-        st.error(f"'{name}' is missing columns: {missing}. Found: {df.columns.tolist()}")
+# -------------------------
+# TAB 1: City Map
+# -------------------------
+with tab_map:
+    if worldcities is None:
+        st.warning("No `data/worldcities.csv` found. Add it to enable the lat/lon city map.")
         st.stop()
 
+    wc = worldcities.copy()
 
-def get_data() -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, Optional[pd.DataFrame]]:
-    """
-    Always returns (cities, countries, langs, worldcities_optional).
+    # Find expected columns
+    lat_col = "lat" if "lat" in wc.columns else None
+    lon_col = "lon" if "lon" in wc.columns else None
+    if not lat_col or not lon_col:
+        st.error(f"worldcities.csv must contain 'lat' and 'lon'. Found: {wc.columns.tolist()}")
+        st.stop()
 
-    Key idea: pages do NOT depend on 'Open Home first'.
-    We load into session_state if missing.
-    """
-    if "cities" not in st.session_state:
-        st.session_state["cities"] = normalize_columns(_read_csv(CITY_CSV))
-    if "countries" not in st.session_state:
-        st.session_state["countries"] = normalize_columns(_read_csv(COUNTRY_CSV))
-    if "languages" not in st.session_state:
-        st.session_state["languages"] = normalize_columns(_read_csv(LANG_CSV))
+    iso3_col = next((c for c in ["iso3", "ISO3", "code3"] if c in wc.columns), None)
+    pop_col = next((c for c in ["population", "pop", "Population"] if c in wc.columns), None)
+    city_col = next((c for c in ["city", "City", "name", "Name"] if c in wc.columns), None)
 
-    # Optional worldcities
-    if "worldcities" not in st.session_state:
-        if WORLDCITIES_CSV.exists():
-            st.session_state["worldcities"] = _read_csv(WORLDCITIES_CSV)
+    c1, c2, c3 = st.columns([1.1, 1, 1])
+    with c1:
+        min_pop = st.number_input("Minimum population", value=200000, step=50000)
+    with c2:
+        max_points = st.slider("Max points (performance)", 2000, 50000, 15000, 1000)
+    with c3:
+        projection = st.selectbox("Projection", ["natural earth", "equirectangular", "orthographic"], index=0)
+
+    chosen_iso3 = None
+    if iso3_col and "Name" in countries.columns and "Code" in countries.columns:
+        countries2 = countries.dropna(subset=["Code", "Name"]).copy()
+        countries2["_label"] = countries2["Name"].astype(str) + " (" + countries2["Code"].astype(str) + ")"
+        pick = st.selectbox("Country filter (optional)", ["All"] + sorted(countries2["_label"].tolist()))
+        if pick != "All":
+            chosen_iso3 = pick.split("(")[-1].replace(")", "").strip()
+
+    df = wc.dropna(subset=[lat_col, lon_col]).copy()
+    df[lat_col] = pd.to_numeric(df[lat_col], errors="coerce")
+    df[lon_col] = pd.to_numeric(df[lon_col], errors="coerce")
+    df = df.dropna(subset=[lat_col, lon_col])
+
+    if pop_col:
+        df[pop_col] = pd.to_numeric(df[pop_col], errors="coerce")
+        df = df[df[pop_col] >= min_pop]
+
+    if chosen_iso3 and iso3_col:
+        df = df[df[iso3_col].astype(str) == str(chosen_iso3)]
+
+    if pop_col and df[pop_col].notna().any():
+        df = df.sort_values(pop_col, ascending=False).head(max_points)
+    else:
+        df = df.head(max_points)
+
+    st.write(f"Showing **{len(df):,}** cities")
+
+    hover_cols = [c for c in [city_col, "country", "admin_name", pop_col] if c and c in df.columns]
+
+    fig = px.scatter_geo(
+        df,
+        lat=lat_col,
+        lon=lon_col,
+        hover_name=city_col if city_col else None,
+        hover_data=hover_cols if hover_cols else None,
+        size=pop_col if pop_col else None,
+        projection=projection,
+        template="plotly_dark",
+        title="Cities (zoom / pan / hover)",
+    )
+    fig.update_layout(
+        height=720,
+        margin=dict(l=0, r=0, t=60, b=0),
+        geo=dict(
+            showocean=True,
+            oceancolor="rgb(12,16,25)",
+            showland=True,
+            landcolor="rgb(20,25,35)",
+            showcountries=True,
+            countrycolor="rgba(255,255,255,0.22)",
+            bgcolor="rgba(0,0,0,0)",
+        ),
+    )
+    st.plotly_chart(fig, use_container_width=True)
+
+# -------------------------
+# TAB 2: City Analytics
+# -------------------------
+with tab_analytics:
+    st.subheader("Urban concentration patterns (MySQL city.csv)")
+    if "Population" in cities_mysql.columns:
+        cities_mysql["Population"] = pd.to_numeric(cities_mysql["Population"], errors="coerce")
+
+    conts = ["All"] + sorted(countries["Continent"].dropna().unique().tolist()) if "Continent" in countries.columns else ["All"]
+    sel_cont = st.selectbox("Continent", conts)
+
+    filtered_countries = countries if sel_cont == "All" else countries[countries["Continent"] == sel_cont]
+    filtered_countries = filtered_countries.dropna(subset=["Code", "Name"]).copy()
+    filtered_countries["_label"] = filtered_countries["Name"].astype(str) + " (" + filtered_countries["Code"].astype(str) + ")"
+    options = sorted(filtered_countries["_label"].tolist())
+
+    default = options[:3] if len(options) >= 3 else options
+    sel_labels = st.multiselect("Compare countries", options=options, default=default)
+
+    if not sel_labels:
+        st.info("Select at least one country.")
+        st.stop()
+
+    sel_codes = [x.split("(")[-1].replace(")", "").strip() for x in sel_labels]
+    subset = cities_mysql[cities_mysql["CountryCode"].astype(str).isin(sel_codes)].copy()
+
+    top_n = st.slider("Top N cities per country", 5, 30, 10, 5)
+
+    rows = []
+    for code in sel_codes:
+        g = subset[subset["CountryCode"].astype(str) == str(code)].dropna(subset=["Population"])
+        g = g.sort_values("Population", ascending=False).head(top_n).copy()
+        g["ISO3"] = str(code)
+        rows.append(g)
+
+    top_all = pd.concat(rows, ignore_index=True) if rows else subset.head(0)
+
+    left, right = st.columns([1.2, 1])
+
+    with left:
+        st.markdown("### Top cities")
+        cols = [c for c in ["ISO3", "Name", "District", "Population"] if c in top_all.columns]
+        out = top_all[cols].copy()
+        if "Population" in out.columns:
+            out["Population"] = out["Population"].map(lambda x: f"{int(x):,}" if pd.notna(x) else "—")
+        st.dataframe(out, use_container_width=True)
+
+    with right:
+        st.markdown("### Urban concentration (Top-10 share)")
+        conc = []
+        for code in sel_codes:
+            g = subset[subset["CountryCode"].astype(str) == str(code)].dropna(subset=["Population"]).sort_values("Population", ascending=False)
+            if g.empty:
+                continue
+            total = g["Population"].sum()
+            top10 = g["Population"].head(10).sum()
+            conc.append({"ISO3": str(code), "Top10_share": (top10 / total) if total else None})
+
+        conc_df = pd.DataFrame(conc)
+        if conc_df.empty:
+            st.write("—")
         else:
-            st.session_state["worldcities"] = None
-
-    cities = st.session_state["cities"].copy()
-    countries = st.session_state["countries"].copy()
-    langs = st.session_state["languages"].copy()
-    worldcities = st.session_state["worldcities"]
-    worldcities = worldcities.copy() if isinstance(worldcities, pd.DataFrame) else None
-
-    # Basic schema checks
-    require_cols(countries, ["Code", "Name"], "countries")
-    require_cols(cities, ["CountryCode"], "cities")
-    require_cols(langs, ["CountryCode", "Language"], "languages")
-
-    countries["Code"] = countries["Code"].astype(str)
-    cities["CountryCode"] = cities["CountryCode"].astype(str)
-    langs["CountryCode"] = langs["CountryCode"].astype(str)
-
-    return cities, countries, langs, worldcities
-
-
-# ----------------------------
-# Formatting helpers
-# ----------------------------
-def format_int(x) -> str:
-    try:
-        if pd.isna(x):
-            return "—"
-        return f"{int(x):,}"
-    except Exception:
-        return "—"
-
-
-# ----------------------------
-# Stats builders (THIS is what your pages import)
-# ----------------------------
-def build_country_language_stats(countries: pd.DataFrame, langs: pd.DataFrame) -> pd.DataFrame:
-    """
-    Per-country:
-      - n_languages
-      - n_official
-      - entropy (if Percentage exists)
-    """
-    c = countries[["Code", "Name"]].copy()
-    for col in ["Continent", "Region", "Population"]:
-        if col in countries.columns:
-            c[col] = countries[col]
-
-    l = langs.copy()
-    l["IsOfficial"] = l["IsOfficial"].astype(str).str.upper() if "IsOfficial" in l.columns else "?"
-    has_pct = "Percentage" in l.columns
-
-    if has_pct:
-        l["Percentage"] = pd.to_numeric(l["Percentage"], errors="coerce")
-
-    g = (
-        l.groupby("CountryCode")
-        .agg(
-            n_languages=("Language", "nunique"),
-            n_official=("IsOfficial", lambda s: int((s == "T").sum())),
-        )
-        .reset_index()
-        .rename(columns={"CountryCode": "Code"})
-    )
-
-    out = c.merge(g, on="Code", how="left")
-    out["n_languages"] = out["n_languages"].fillna(0).astype(int)
-    out["n_official"] = out["n_official"].fillna(0).astype(int)
-
-    # Entropy if Percentage exists and has data
-    out["entropy"] = None
-    if has_pct and l["Percentage"].notna().any():
-        def entropy_for_country(df: pd.DataFrame) -> float:
-            p = df["Percentage"].dropna().values
-            if len(p) == 0:
-                return float("nan")
-            # convert percent to probability, normalize to sum=1 (dataset may not sum exactly)
-            probs = (p / 100.0)
-            s = probs.sum()
-            if s <= 0:
-                return float("nan")
-            probs = probs / s
-            return float(-sum(pi * math.log(pi) for pi in probs if pi > 0))
-
-        ent = l.groupby("CountryCode").apply(entropy_for_country).reset_index(name="entropy")
-        ent = ent.rename(columns={"CountryCode": "Code"})
-        out = out.merge(ent, on="Code", how="left")
-
-    return out
-
-
-def build_global_language_stats(langs: pd.DataFrame, countries: pd.DataFrame) -> pd.DataFrame:
-    """
-    Global language table:
-      - countries_spoken: number of countries where language appears
-      - official_countries: number of countries where it is official (if IsOfficial exists)
-    """
-    l = langs.copy()
-    l["IsOfficial"] = l["IsOfficial"].astype(str).str.upper() if "IsOfficial" in l.columns else "?"
-
-    g = (
-        l.groupby("Language")
-        .agg(
-            countries_spoken=("CountryCode", "nunique"),
-            official_countries=("IsOfficial", lambda s: int((s == "T").sum())),
-        )
-        .reset_index()
-        .sort_values(["countries_spoken", "official_countries"], ascending=False)
-        .reset_index(drop=True)
-    )
-    return g
+            figc = px.bar(conc_df, x="ISO3", y="Top10_share", template="plotly_dark", title="Top-10 population share")
+            figc.update_layout(margin=dict(l=0, r=0, t=60, b=0))
+            st.plotly_chart(figc, use_container_width=True)
