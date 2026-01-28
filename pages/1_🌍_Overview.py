@@ -1,9 +1,18 @@
 import streamlit as st
+import pandas as pd
 import plotly.express as px
-from utils import build_country_language_stats, build_global_language_stats
-from utils import inject_global_css, render_hero
+
+st.set_page_config(page_title="Country Explorer — Popuinatlas", page_icon="🧭", layout="wide")
+
+from utils import inject_global_css, render_hero, get_data, normalize_columns, require_cols, format_int
+
 inject_global_css()
-render_hero("🧩", "This Page Title", "One-line description of what the user can do here.")
+render_hero("🧭", "Country Explorer", "Click a country on the map or use the sidebar to drill down into languages and top cities.")
+
+cities, countries, langs = get_data()
+countries = normalize_columns(countries)
+cities = normalize_columns(cities)
+langs = normalize_columns(langs)
 
 
 st.set_page_config(page_title="Overview", layout="wide")
