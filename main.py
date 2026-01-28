@@ -2,6 +2,9 @@ import streamlit as st
 import pandas as pd
 
 from utils import inject_global_css, render_hero, card
+from utils import get_data
+cities, countries, langs = get_data()
+
 
 # IMPORTANT: set_page_config should be the first Streamlit command on the page
 st.set_page_config(
