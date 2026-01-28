@@ -2,6 +2,10 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 from utils import format_int
+from utils import inject_global_css, render_hero
+inject_global_css()
+render_hero("🧩", "This Page Title", "One-line description of what the user can do here.")
+
 
 st.set_page_config(page_title="Country Explorer", layout="wide")
 st.title("🧭 Country Explorer")
