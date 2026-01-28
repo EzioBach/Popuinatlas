@@ -17,9 +17,7 @@ st.set_page_config(page_title="Country Explorer", layout="wide")
 st.title("🧭 Country Explorer")
 st.caption("Tip: **Double-click** a country on the map to select it. Single-click only highlights. You can also use the sidebar.")
 
-# -------------------------
-# Safety
-# -------------------------
+
 required = {"countries", "cities", "languages"}
 if not required.issubset(st.session_state.keys()):
     st.error("Open Home first (main.py).")
@@ -29,9 +27,7 @@ countries = st.session_state["countries"].copy()
 cities = st.session_state["cities"].copy()
 langs = st.session_state["languages"].copy()
 
-# -------------------------
-# Prep / labels
-# -------------------------
+
 countries = countries.dropna(subset=["Code", "Name"]).copy()
 countries["Code"] = countries["Code"].astype(str)
 countries["Name"] = countries["Name"].astype(str)
@@ -42,7 +38,6 @@ countries = countries.sort_values("_label").reset_index(drop=True)
 label_to_iso3 = dict(zip(countries["_label"], countries["Code"]))
 iso3_to_label = dict(zip(countries["Code"], countries["_label"]))
 
-# Single source of truth for current country
 if "selected_iso3" not in st.session_state:
     st.session_state["selected_iso3"] = countries["Code"].iloc[0]
 
@@ -66,13 +61,11 @@ def get_clicked_iso3(selection_obj):
 
     pts = None
 
-    # Case A: selection_obj is a dict
     if isinstance(selection_obj, dict):
         pts = selection_obj.get("points")
         if not pts:
             pts = (selection_obj.get("selection") or {}).get("points")
 
-    # Case B: selection_obj is a "dict-like" object with .selection
     if pts is None and hasattr(selection_obj, "selection"):
         sel = getattr(selection_obj, "selection")
         if isinstance(sel, dict):
@@ -85,10 +78,8 @@ def get_clicked_iso3(selection_obj):
     if not p0 or not isinstance(p0, dict):
         return None
 
-    # Best: Plotly choropleth returns ISO3 in "location"
     iso = p0.get("location")
 
-    # Fallback: use customdata if present
     if not iso:
         cd = p0.get("customdata")
         if isinstance(cd, (list, tuple)) and len(cd) > 0:
@@ -96,13 +87,10 @@ def get_clicked_iso3(selection_obj):
 
     return str(iso) if iso else None
 
-# -------------------------
-# Sidebar (synced to selected_iso3)
-# -------------------------
+
 with st.sidebar:
     st.header("Controls")
 
-    # Force selectbox to reflect current selected_iso3 (important)
     current_iso3 = str(st.session_state["selected_iso3"])
     st.session_state[SELECTBOX_KEY] = iso3_to_label.get(current_iso3, countries["_label"].iloc[0])
 
@@ -120,18 +108,13 @@ with st.sidebar:
     st.divider()
     debug = st.toggle("Debug mode", value=False)
 
-# -------------------------
-# Layout
-# -------------------------
+
 left, right = st.columns([1.6, 1])
 
-# -------------------------
-# Map (click → update selected_iso3)
-# -------------------------
+
 with left:
     selected_iso3 = str(st.session_state["selected_iso3"])
 
-    # highlight column
     countries["_highlight"] = (countries["Code"] == selected_iso3).astype(int)
 
     fig = px.choropleth(
@@ -140,7 +123,7 @@ with left:
         locationmode="ISO-3",
         color="_highlight",
         hover_name="Name",
-        custom_data=["Code"],  # reliable fallback
+        custom_data=["Code"],  
         template="plotly_dark",
         title="World map (click a country to select it)",
         range_color=(0, 1),
@@ -156,7 +139,7 @@ with left:
         coloraxis_showscale=False,
         height=560,
         margin=dict(l=0, r=0, t=60, b=0),
-        clickmode="event+select",  # makes click behave like a “selection”
+        clickmode="event+select", 
         geo=dict(
             projection_type="natural earth",
             showframe=False,
@@ -188,9 +171,7 @@ with left:
         set_country(clicked_iso3)
         st.rerun()
 
-# -------------------------
-# Details panel
-# -------------------------
+
 with right:
     selected_iso3 = str(st.session_state["selected_iso3"])
     row = countries[countries["Code"] == selected_iso3].head(1)
@@ -212,9 +193,7 @@ with right:
 
 st.divider()
 
-# -------------------------
-# Languages
-# -------------------------
+
 st.subheader("🗣️ Languages")
 selected_iso3 = str(st.session_state["selected_iso3"])
 country_langs = langs[langs["CountryCode"].astype(str) == selected_iso3].copy()
@@ -255,9 +234,7 @@ else:
 
 st.divider()
 
-# -------------------------
-# Cities
-# -------------------------
+
 st.subheader("🏙️ Cities (top by population)")
 country_cities = cities[cities["CountryCode"].astype(str) == selected_iso3].copy()
 
