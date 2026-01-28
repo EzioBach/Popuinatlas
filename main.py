@@ -131,3 +131,4 @@ st.divider()
 # Footer guidance
 # -------------------------
 st.info("✅ Use the sidebar to navigate between pages 👈 (Country Explorer • Language Explorer • etc.)")
+
