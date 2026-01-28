@@ -1,66 +1,122 @@
 import streamlit as st
-from utils import load_data, prep_tables, prep_worldcities
+import pandas as pd
 
-st.set_page_config(page_title="Popuinatlas - A Geo linguistic app World Languages Dashboard", layout="wide")
+from utils import inject_global_css, render_hero, card
 
-# --- Personalization ---
+# IMPORTANT: set_page_config should be the first Streamlit command on the page
+st.set_page_config(
+    page_title="Popuinatlas — Geo-Linguistic Atlas",
+    page_icon="🧭",
+    layout="wide",
+)
+
+inject_global_css()
+
+# -------------------------
+# Identity (your seminar info)
+# -------------------------
 STUDENT_NAME = "Ezzat Bachour"
 MAJOR = "B.Sc. Psychology"
 UNIVERSITY = "Leuphana University Lüneburg"
 MATRICULATION_NUMBER = "3045988"
+
 SEMINAR_NAME = "Mastering Data Visualization with Python (S)"
 LECTURER_NAME = "Jorge Gustavo Rodríguez Aboytes"
 
-cities, countries, langs, worldcities = load_data()
-cities, countries, langs = prep_tables(cities, countries, langs)
-worldcities = prep_worldcities(worldcities)
+# -------------------------
+# Data
+# -------------------------
+@st.cache_data
+def load_data():
+    cities = pd.read_csv("data/city.csv")
+    countries = pd.read_csv("data/country.csv")
+    languages = pd.read_csv("data/countrylanguage.csv")
+    return cities, countries, languages
+
+cities, countries, languages = load_data()
 
 st.session_state["cities"] = cities
 st.session_state["countries"] = countries
-st.session_state["languages"] = langs
-st.session_state["worldcities"] = worldcities  # may be None if file not present
+st.session_state["languages"] = languages
 
-st.markdown(
-f"""
-# 🌍 World Languages Dashboard
-
-**Author:** {STUDENT_NAME}  
-**Program:** {MAJOR} · {UNIVERSITY}  
-**Matriculation No.:** `{MATRICULATION_NUMBER}`  
-**Seminar:** *{SEMINAR_NAME}*  
-**Lecturer:** *{LECTURER_NAME}*
-
----
-"""
+# -------------------------
+# Hero header
+# -------------------------
+render_hero(
+    "🧭",
+    "World Geo-Linguistic Dashboard",
+    "Explore countries, cities, and language distributions through interactive maps + relational analytics.",
 )
 
-c1, c2, c3, c4 = st.columns(4)
-c1.metric("Countries", f"{countries.shape[0]:,}")
-c2.metric("Cities (MySQL World)", f"{cities.shape[0]:,}")
-c3.metric("Language rows", f"{langs.shape[0]:,}")
-c4.metric("Lat/Lon cities loaded", "Yes" if worldcities is not None else "No")
+# -------------------------
+# Intro + Identity
+# -------------------------
+left, right = st.columns([1.3, 1])
 
-st.markdown(
-"""
-### What you can do
-- **Overview:** global choropleths + top languages
-- **Country Explorer:** click a country on a clean map to drill down
-- **Language Explorer:** pick a language → see where it’s listed
-- **Diversity Insights:** language count + entropy-based diversity index
-- **City Analytics:** urban concentration patterns (no fake geo)
-- **City Map:** real lat/lon city mapping (if you added worldcities.csv)
-"""
-)
+with left:
+    card(
+        "What this app is",
+        """
+        <ul>
+          <li><b>Geo layer:</b> country drill-downs and region context</li>
+          <li><b>Language layer:</b> official vs. non-official languages + prevalence (when available)</li>
+          <li><b>City layer:</b> population-driven exploration of urban centers</li>
+        </ul>
+        """,
+    )
+
+    card(
+        "How to use it",
+        """
+        <ul>
+          <li>Use the <b>sidebar</b> to navigate pages.</li>
+          <li>On <b>Country Explorer</b>, click a country to update details instantly.</li>
+          <li>On <b>Language Explorer</b>, choose a language to see where it’s spoken.</li>
+        </ul>
+        """,
+    )
+
+with right:
+    st.markdown("### 📌 Project metadata")
+    st.markdown(
+        f"""
+        **Author:** {STUDENT_NAME}  
+        **Program:** {MAJOR} · {UNIVERSITY}  
+        **Matriculation No.:** `{MATRICULATION_NUMBER}`  
+        **Seminar:** *{SEMINAR_NAME}*  
+        **Lecturer:** *{LECTURER_NAME}*
+        """
+    )
+
+    st.markdown("### 📊 Dataset snapshot")
+    k1, k2, k3 = st.columns(3)
+    k1.metric("Countries", f"{countries.shape[0]:,}")
+    k2.metric("Cities", f"{cities.shape[0]:,}")
+    k3.metric("Language rows", f"{languages.shape[0]:,}")
 
 st.divider()
-st.subheader("Data preview")
-tab1, tab2, tab3 = st.tabs(["Countries", "Languages", "Cities"])
-with tab1: st.dataframe(countries.head(10), use_container_width=True)
-with tab2: st.dataframe(langs.head(10), use_container_width=True)
-with tab3: st.dataframe(cities.head(10), use_container_width=True)
 
-if worldcities is not None:
-    st.subheader("Preview: Lat/Lon Cities (worldcities.csv)")
-    st.dataframe(worldcities.head(10), use_container_width=True)
+# -------------------------
+# Preview area (cleaner than 3 stacked tables)
+# -------------------------
+st.markdown("## 🔍 Quick previews")
+tab1, tab2, tab3 = st.tabs(["🌍 Countries", "🗣️ Languages", "🏙️ Cities"])
 
-st.info("Use the sidebar to navigate between pages.")
+with tab1:
+    st.caption("Country table preview (top rows).")
+    st.dataframe(countries.head(20), use_container_width=True)
+
+with tab2:
+    st.caption("Country-language table preview (top rows).")
+    st.dataframe(languages.head(20), use_container_width=True)
+
+with tab3:
+    st.caption("City table preview (top rows).")
+    st.dataframe(cities.head(20), use_container_width=True)
+
+st.divider()
+
+# -------------------------
+# Footer guidance
+# -------------------------
+st.info("✅ Use the sidebar to navigate between pages 👈 (Country Explorer • Language Explorer • etc.)")
