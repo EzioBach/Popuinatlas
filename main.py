@@ -1,81 +1,133 @@
 import streamlit as st
 import pandas as pd
+import plotly.express as px
 
-from utils import inject_global_css, render_hero, get_data
+st.set_page_config(page_title="Country Explorer — Popuinatlas", page_icon="🧭", layout="wide")
 
+from utils import inject_global_css, render_hero, get_data, normalize_columns, require_cols, format_int
+
+inject_global_css()
+render_hero("🧭", "Country Explorer", "Click a country on the map or use the sidebar to drill down into languages and top cities.")
+
+cities, countries, langs = get_data()
+countries = normalize_columns(countries)
+cities = normalize_columns(cities)
+langs = normalize_columns(langs)
+
+# IMPORTANT: set_page_config should be the first Streamlit command on the page
 st.set_page_config(
-    page_title="Popuinatlas — A Geo-Linguistic Atlas",
+    page_title="Popuinatlas — Geo-Linguistic Atlas",
     page_icon="🧭",
     layout="wide",
 )
 
 inject_global_css()
-render_hero(
-    "🧭",
-    "Popuinatlas",
-    "Explore countries, cities, and language distributions through interactive maps + relational analytics.",
-    pill="Geo-Linguistic Dashboard",
-)
 
-# Load data (and keep in session_state automatically)
-cities, countries, langs, worldcities = get_data()
-
-# ---- Metadata (you can edit these) ----
+# -------------------------
+# Identity (your seminar info)
+# -------------------------
 STUDENT_NAME = "Ezzat Bachour"
 MAJOR = "B.Sc. Psychology"
 UNIVERSITY = "Leuphana University Lüneburg"
 MATRICULATION_NUMBER = "3045988"
+
 SEMINAR_NAME = "Mastering Data Visualization with Python (S)"
 LECTURER_NAME = "Jorge Gustavo Rodríguez Aboytes"
 
-left, right = st.columns([1.2, 1])
+# -------------------------
+# Data
+# -------------------------
+@st.cache_data
+def load_data():
+    cities = pd.read_csv("data/city.csv")
+    countries = pd.read_csv("data/country.csv")
+    languages = pd.read_csv("data/countrylanguage.csv")
+    return cities, countries, languages
+
+cities, countries, languages = load_data()
+
+st.session_state["cities"] = cities
+st.session_state["countries"] = countries
+st.session_state["languages"] = languages
+
+# -------------------------
+# Hero header
+# -------------------------
+render_hero(
+    "🧭",
+    "World Geo-Linguistic Dashboard",
+    "Explore countries, cities, and language distributions through interactive maps + relational analytics.",
+)
+
+# -------------------------
+# Intro + Identity
+# -------------------------
+left, right = st.columns([1.3, 1])
 
 with left:
-    st.subheader("What this app is")
-    st.markdown(
+    card(
+        "What this app is",
         """
-- **Country drill-downs**: borders, region context, population
-- **Language structure**: official vs. non-official + prevalence (when available)
-- **City patterns**: urban concentration + city distribution mapping (optional lat/lon layer)
-        """
+        <ul>
+          <li><b>Geo layer:</b> country drill-downs and region context</li>
+          <li><b>Language layer:</b> official vs. non-official languages + prevalence (when available)</li>
+          <li><b>City layer:</b> population-driven exploration of urban centers</li>
+        </ul>
+        """,
     )
 
-    st.subheader("How to use it")
-    st.markdown(
+    card(
+        "How to use it",
         """
-Use the **sidebar** to move between pages:
-- 🌍 Overview → global KPIs and high-signal maps  
-- 🧭 Country Explorer → click/select a country and drill down  
-- 🗣️ Language Explorer → pick a language and see where it appears  
-- 📊 Diversity Insights → diversity metrics (incl. entropy if % exists)  
-- 🏙️ City Analytics → city map + population analytics  
-        """
+        <ul>
+          <li>Use the <b>sidebar</b> to navigate pages.</li>
+          <li>On <b>Country Explorer</b>, click a country to update details instantly.</li>
+          <li>On <b>Language Explorer</b>, choose a language to see where it’s spoken.</li>
+        </ul>
+        """,
     )
 
 with right:
-    st.subheader("📌 Project metadata")
+    st.markdown("### 📌 Project metadata")
     st.markdown(
         f"""
-**Author:** {STUDENT_NAME}  
-**Program:** {MAJOR} · {UNIVERSITY}  
-**Matriculation No.:** `{MATRICULATION_NUMBER}`  
-**Seminar:** *{SEMINAR_NAME}*  
-**Lecturer:** *{LECTURER_NAME}*
+        **Author:** {STUDENT_NAME}  
+        **Program:** {MAJOR} · {UNIVERSITY}  
+        **Matriculation No.:** `{MATRICULATION_NUMBER}`  
+        **Seminar:** *{SEMINAR_NAME}*  
+        **Lecturer:** *{LECTURER_NAME}*
         """
     )
 
-    st.subheader("📦 Dataset snapshot")
-    c1, c2, c3 = st.columns(3)
-    c1.metric("Countries", f"{countries.shape[0]:,}")
-    c2.metric("Cities", f"{cities.shape[0]:,}")
-    c3.metric("Language rows", f"{langs.shape[0]:,}")
+    st.markdown("### 📊 Dataset snapshot")
+    k1, k2, k3 = st.columns(3)
+    k1.metric("Countries", f"{countries.shape[0]:,}")
+    k2.metric("Cities", f"{cities.shape[0]:,}")
+    k3.metric("Language rows", f"{languages.shape[0]:,}")
 
 st.divider()
 
-with st.expander("Preview raw tables (first 10 rows each)"):
-    st.write("Countries")
-    st.dataframe(countries.head(10), use_container_width=True)
-    st.write("Languages")
-    st.dataframe(langs.head(10), use_container_width=True)
-    st.write("Cities")
-    st.dataframe(cities.head(10), use_container_width=True)
+# -------------------------
+# Preview area (cleaner than 3 stacked tables)
+# -------------------------
+st.markdown("## 🔍 Quick previews")
+tab1, tab2, tab3 = st.tabs(["🌍 Countries", "🗣️ Languages", "🏙️ Cities"])
+
+with tab1:
+    st.caption("Country table preview (top rows).")
+    st.dataframe(countries.head(20), use_container_width=True)
+
+with tab2:
+    st.caption("Country-language table preview (top rows).")
+    st.dataframe(languages.head(20), use_container_width=True)
+
+with tab3:
+    st.caption("City table preview (top rows).")
+    st.dataframe(cities.head(20), use_container_width=True)
+
+st.divider()
+
+# -------------------------
+# Footer guidance
+# -------------------------
+st.info("✅ Use the sidebar to navigate between pages 👈 (Country Explorer • Language Explorer • etc.)")
