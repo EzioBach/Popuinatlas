@@ -34,7 +34,7 @@ with left:
         """
 - **Country drill-downs**: borders, region context, population
 - **Language structure**: official vs non-official, prevalence (when available)
-- **City patterns**: urban concentration + (optional) lat/lon world city map
+- **City patterns**: urban concentration - lat/lon world city map
         """
     )
 
@@ -45,7 +45,7 @@ Use the **sidebar** pages:
 - 🌍 Overview → global KPIs + best maps  
 - 🧭 Country Explorer → pick a country and drill down  
 - 🗣️ Language Explorer → pick a language and see where it appears  
-- 📊 Diversity Insights → diversity metrics (entropy if % exists)  
+- 📊 Diversity Insights → diversity metrics
 - 🏙️ City Analytics → lat/lon city map + city population analytics  
         """
     )
