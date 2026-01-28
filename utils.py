@@ -1,108 +1,140 @@
+# utils.py
 from __future__ import annotations
 
-import math
-from typing import Optional, Tuple
-
+from pathlib import Path
+import numpy as np
 import pandas as pd
 import streamlit as st
 
+DATA_DIR = Path(__file__).parent / "data"
 
 # -----------------------------
-# Styling helpers
+# Styling / UI
 # -----------------------------
 def inject_global_css() -> None:
     st.markdown(
         """
 <style>
-/* Slightly nicer spacing + typography */
+/* Page padding */
 .block-container { padding-top: 1.2rem; padding-bottom: 2.5rem; max-width: 1200px; }
 
+/* Make Plotly charts blend in */
+[data-testid="stPlotlyChart"] > div { border-radius: 18px; overflow: hidden; }
+
+/* Slightly nicer sidebar */
+section[data-testid="stSidebar"] { border-right: 1px solid rgba(255,255,255,0.06); }
+
 /* Hero card */
-.pui-hero {
-  background: radial-gradient(1200px 500px at 20% 0%, rgba(120,90,255,.25), rgba(0,0,0,0)) ,
-              radial-gradient(900px 400px at 80% 10%, rgba(0,180,255,.18), rgba(0,0,0,0));
-  border: 1px solid rgba(255,255,255,.08);
+.pop-hero {
+  background: radial-gradient(1200px 600px at 20% 0%, rgba(120,70,255,0.28), rgba(0,0,0,0)) ,
+              linear-gradient(135deg, rgba(30,40,70,0.75), rgba(10,14,22,0.6));
+  border: 1px solid rgba(255,255,255,0.08);
   border-radius: 22px;
-  padding: 20px 22px;
-  margin-bottom: 18px;
+  padding: 18px 18px;
+  margin: 6px 0 18px 0;
 }
-.pui-hero-title {
-  font-size: 1.45rem;
-  font-weight: 700;
-  letter-spacing: .2px;
-  margin: 0 0 8px 0;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.pui-hero-sub {
-  margin: 0;
-  opacity: .85;
-  font-size: 1.02rem;
-  line-height: 1.35;
-}
-.pui-pill {
-  display: inline-block;
-  margin-top: 12px;
-  padding: 6px 10px;
+.pop-hero-top { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+.pop-hero-title { font-size: 1.15rem; font-weight: 800; letter-spacing: 0.2px; opacity: 0.98; }
+.pop-hero-sub { margin-top: 6px; opacity: 0.86; font-size: 0.98rem; line-height: 1.35; }
+.pop-pill {
+  display:inline-block; padding: 4px 10px;
   border-radius: 999px;
-  font-size: .9rem;
-  border: 1px solid rgba(255,255,255,.10);
-  background: rgba(255,255,255,.04);
-  opacity: .95;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.10);
+  font-size: 0.85rem;
+  opacity: 0.9;
 }
-
-/* Make metric labels wrap instead of truncating */
-div[data-testid="stMetricLabel"] > div { white-space: normal !important; }
-
-/* Sidebar spacing */
-section[data-testid="stSidebar"] .block-container { padding-top: 1.2rem; }
 </style>
-""",
+        """,
         unsafe_allow_html=True,
     )
 
-
-def render_hero(icon: str, title: str, subtitle: str, pill: Optional[str] = None) -> None:
-    pill_html = f'<div class="pui-pill">{pill}</div>' if pill else ""
+def render_hero(icon: str, title: str, subtitle: str, pill: str | None = None) -> None:
+    pill_html = f'<span class="pop-pill">{pill}</span>' if pill else ""
     st.markdown(
         f"""
-<div class="pui-hero">
-  <div class="pui-hero-title">{icon} {title}</div>
-  <p class="pui-hero-sub">{subtitle}</p>
-  {pill_html}
+<div class="pop-hero">
+  <div class="pop-hero-top">
+    <div style="font-size:1.6rem">{icon}</div>
+    <div class="pop-hero-title">{title}</div>
+    {pill_html}
+  </div>
+  <div class="pop-hero-sub">{subtitle}</div>
 </div>
-""",
+        """,
         unsafe_allow_html=True,
     )
 
+def format_int(x) -> str:
+    try:
+        if pd.isna(x):
+            return "—"
+        return f"{int(float(x)):,}"
+    except Exception:
+        return "—"
 
 # -----------------------------
-# Data loading (works on every page)
+# Data loading (cached)
 # -----------------------------
 @st.cache_data(show_spinner=False)
-def _load_csvs() -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, Optional[pd.DataFrame]]:
-    cities = pd.read_csv("data/city.csv")
-    countries = pd.read_csv("data/country.csv")
-    langs = pd.read_csv("data/countrylanguage.csv")
+def _read_csv(path: Path) -> pd.DataFrame | None:
+    if not path.exists():
+        return None
+    return pd.read_csv(path)
 
-    worldcities = None
-    try:
-        worldcities = pd.read_csv("data/worldcities.csv")
-    except Exception:
-        worldcities = None
+def normalize_columns(df: pd.DataFrame) -> pd.DataFrame:
+    df = df.copy()
+    df.columns = [c.strip() for c in df.columns]
+    return df
 
-    return cities, countries, langs, worldcities
+def _coerce_bool_official(series: pd.Series) -> pd.Series:
+    s = series.copy()
+    # MySQL world dataset uses 'T'/'F'
+    if s.dtype == object:
+        s = s.astype(str).str.strip().str.upper().replace({"TRUE":"T","FALSE":"F","YES":"T","NO":"F"})
+        return s.isin(["T", "1", "Y"])
+    return s.astype(bool)
 
-
-def get_data() -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, Optional[pd.DataFrame]]:
+def get_data() -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame | None]:
     """
-    Loads CSVs and ALWAYS ensures session_state contains:
-    - countries, cities, languages, worldcities (optional)
-    This removes the need for "Open Home first".
-    """
-    cities, countries, langs, worldcities = _load_csvs()
+    Returns: (cities, countries, languages, worldcities_or_None)
 
+    Also ensures st.session_state has:
+      - "cities", "countries", "languages", "worldcities"
+    so pages can be opened directly (Streamlit Cloud users often do).
+    """
+    # If already loaded, return from session_state
+    keys = {"cities", "countries", "languages", "worldcities"}
+    if keys.issubset(st.session_state.keys()):
+        return (
+            st.session_state["cities"],
+            st.session_state["countries"],
+            st.session_state["languages"],
+            st.session_state["worldcities"],
+        )
+
+    # Try common filenames (yours may be city.csv/country.csv/countrylanguage.csv)
+    cities = _read_csv(DATA_DIR / "city.csv")
+    countries = _read_csv(DATA_DIR / "country.csv")
+    langs = _read_csv(DATA_DIR / "countrylanguage.csv")
+
+    # Optional lat/lon city dataset
+    worldcities = _read_csv(DATA_DIR / "worldcities.csv")
+
+    if cities is None or countries is None or langs is None:
+        missing = []
+        if cities is None: missing.append("data/city.csv")
+        if countries is None: missing.append("data/country.csv")
+        if langs is None: missing.append("data/countrylanguage.csv")
+        raise FileNotFoundError(f"Missing required dataset file(s): {', '.join(missing)}")
+
+    cities = normalize_columns(cities)
+    countries = normalize_columns(countries)
+    langs = normalize_columns(langs)
+    if worldcities is not None:
+        worldcities = normalize_columns(worldcities)
+
+    # Store for all pages
     st.session_state["cities"] = cities
     st.session_state["countries"] = countries
     st.session_state["languages"] = langs
@@ -110,115 +142,95 @@ def get_data() -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, Optional[pd.Da
 
     return cities, countries, langs, worldcities
 
-
 # -----------------------------
-# Robust dataframe utilities
-# -----------------------------
-def normalize_columns(df: pd.DataFrame) -> pd.DataFrame:
-    rename_map = {
-        "Name_x": "Name",
-        "Name_y": "Name",
-        "Code_x": "Code",
-        "Code_y": "Code",
-        "CountryCode_x": "CountryCode",
-        "CountryCode_y": "CountryCode",
-    }
-    for old, new in rename_map.items():
-        if old in df.columns and new not in df.columns:
-            df = df.rename(columns={old: new})
-    return df
-
-
-def require_cols(df: pd.DataFrame, needed: list[str], name: str) -> None:
-    missing = [c for c in needed if c not in df.columns]
-    if missing:
-        st.error(f"'{name}' is missing columns: {missing}. Found: {df.columns.tolist()}")
-        st.stop()
-
-
-def format_int(x) -> str:
-    try:
-        if pd.isna(x):
-            return "—"
-        return f"{int(x):,}"
-    except Exception:
-        return "—"
-
-
-# -----------------------------
-# Stats builders (used by Overview / Diversity)
+# Derived stats
 # -----------------------------
 def build_country_language_stats(countries: pd.DataFrame, langs: pd.DataFrame) -> pd.DataFrame:
-    countries = normalize_columns(countries).copy()
-    langs = normalize_columns(langs).copy()
+    c = countries.copy()
+    l = langs.copy()
 
-    require_cols(countries, ["Code", "Name"], "countries")
-    require_cols(langs, ["CountryCode", "Language"], "languages")
+    # Standard expected cols in MySQL world dataset:
+    # countries: Code, Name, Continent, Region, Population
+    # langs: CountryCode, Language, IsOfficial, Percentage
+    if "CountryCode" not in l.columns and "Code" in l.columns:
+        l = l.rename(columns={"Code": "CountryCode"})
+    if "Language" not in l.columns:
+        # best effort: find language-like col
+        cand = [x for x in l.columns if x.lower() in ("language", "lang")]
+        if cand:
+            l = l.rename(columns={cand[0]: "Language"})
 
-    countries["Code"] = countries["Code"].astype(str)
-    langs["CountryCode"] = langs["CountryCode"].astype(str)
+    # Basic group stats
+    grp = l.groupby("CountryCode", dropna=False)
+    out = pd.DataFrame({
+        "Code": grp["Language"].nunique(),
+    }).rename(columns={"Code": "n_languages"})
+    out.index.name = "Code"
+    out = out.reset_index()
 
-    # language counts per country
-    n_lang = langs.groupby("CountryCode")["Language"].nunique().rename("n_languages")
-
-    # official count
-    if "IsOfficial" in langs.columns:
-        tmp = langs.copy()
-        tmp["IsOfficial"] = tmp["IsOfficial"].astype(str).str.upper()
-        n_off = tmp[tmp["IsOfficial"] == "T"].groupby("CountryCode")["Language"].nunique().rename("n_official")
+    # Official count
+    if "IsOfficial" in l.columns:
+        is_off = _coerce_bool_official(l["IsOfficial"])
+        tmp = l.assign(_is_off=is_off).groupby("CountryCode")["_is_off"].sum().reset_index()
+        tmp.columns = ["Code", "n_official"]
+        out = out.merge(tmp, on="Code", how="left")
     else:
-        n_off = pd.Series(dtype="float64", name="n_official")
+        out["n_official"] = np.nan
 
-    out = countries.merge(n_lang, left_on="Code", right_index=True, how="left")
-    out = out.merge(n_off, left_on="Code", right_index=True, how="left")
+    # Entropy (only if Percentage exists and has values)
+    if "Percentage" in l.columns:
+        perc = pd.to_numeric(l["Percentage"], errors="coerce")
+        l2 = l.assign(_p=perc).dropna(subset=["_p"])
+        if not l2.empty:
+            # Shannon entropy: -sum(p_i log p_i), p in [0,1]
+            l2["_p"] = l2["_p"] / 100.0
+            def _entropy(p):
+                p = p[p > 0]
+                return float(-(p * np.log(p)).sum()) if len(p) else np.nan
+            ent = l2.groupby("CountryCode")["_p"].apply(_entropy).reset_index()
+            ent.columns = ["Code", "entropy"]
+            out = out.merge(ent, on="Code", how="left")
+        else:
+            out["entropy"] = np.nan
+    else:
+        out["entropy"] = np.nan
 
-    out["n_languages"] = out["n_languages"].fillna(0).astype(int)
-    out["n_official"] = out["n_official"].fillna(0).astype(int)
+    # Merge country metadata
+    if "Code" not in c.columns and "CountryCode" in c.columns:
+        c = c.rename(columns={"CountryCode": "Code"})
+    keep = [x for x in ["Code", "Name", "Continent", "Region", "Population"] if x in c.columns]
+    out = out.merge(c[keep], on="Code", how="left")
 
-    # entropy if percentages exist
-    entropy = pd.Series(index=out["Code"], dtype="float64", name="entropy")
-
-    if "Percentage" in langs.columns:
-        tmp = langs[["CountryCode", "Language", "Percentage"]].copy()
-        tmp["Percentage"] = pd.to_numeric(tmp["Percentage"], errors="coerce")
-        tmp = tmp.dropna(subset=["Percentage"])
-        # convert to proportions (0..1)
-        tmp["p"] = tmp["Percentage"] / 100.0
-        tmp = tmp[(tmp["p"] > 0) & (tmp["p"] <= 1)]
-
-        def shannon(group: pd.DataFrame) -> float:
-            ps = group["p"].values
-            # normalize if sums are weird
-            s = ps.sum()
-            if s <= 0:
-                return float("nan")
-            ps = ps / s
-            return float(-sum(p * math.log(p, 2) for p in ps if p > 0))
-
-        H = tmp.groupby("CountryCode").apply(shannon)
-        entropy.update(H)
-
-    out["entropy"] = out["Code"].map(entropy)
-
-    # keep standard columns if present
-    for col in ["Continent", "Region", "Population"]:
+    # Fill missing numeric
+    for col in ["n_languages", "n_official"]:
         if col in out.columns:
-            out[col] = out[col]
+            out[col] = pd.to_numeric(out[col], errors="coerce").fillna(0)
+
+    if "Population" in out.columns:
+        out["Population"] = pd.to_numeric(out["Population"], errors="coerce")
 
     return out
 
+def build_global_language_stats(langs: pd.DataFrame, countries: pd.DataFrame | None = None) -> pd.DataFrame:
+    l = langs.copy()
+    if "Language" not in l.columns:
+        return pd.DataFrame(columns=["Language", "countries_spoken", "official_countries"])
 
-def build_global_language_stats(langs: pd.DataFrame, countries: pd.DataFrame) -> pd.DataFrame:
-    langs = normalize_columns(langs).copy()
-    countries = normalize_columns(countries).copy()
+    # Count countries where language appears
+    by_lang = l.groupby("Language")["CountryCode"].nunique().reset_index()
+    by_lang.columns = ["Language", "countries_spoken"]
 
-    require_cols(langs, ["CountryCode", "Language"], "languages")
-    require_cols(countries, ["Code", "Name"], "countries")
+    # Count where official
+    if "IsOfficial" in l.columns:
+        is_off = _coerce_bool_official(l["IsOfficial"])
+        l2 = l.assign(_is_off=is_off)
+        off = l2[l2["_is_off"]].groupby("Language")["CountryCode"].nunique().reset_index()
+        off.columns = ["Language", "official_countries"]
+        by_lang = by_lang.merge(off, on="Language", how="left")
+    else:
+        by_lang["official_countries"] = np.nan
 
-    langs["CountryCode"] = langs["CountryCode"].astype(str)
-    countries["Code"] = countries["Code"].astype(str)
+    by_lang["official_countries"] = pd.to_numeric(by_lang["official_countries"], errors="coerce").fillna(0).astype(int)
+    by_lang = by_lang.sort_values("countries_spoken", ascending=False)
 
-    # count how many countries each language appears in
-    g = langs.groupby("Language")["CountryCode"].nunique().rename("countries_spoken").reset_index()
-    g = g.sort_values("countries_spoken", ascending=False).reset_index(drop=True)
-    return g
+    return by_lang
