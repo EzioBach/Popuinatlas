@@ -1,4 +1,3 @@
-# utils.py
 from __future__ import annotations
 
 from pathlib import Path
@@ -8,9 +7,6 @@ import streamlit as st
 
 DATA_DIR = Path(__file__).parent / "data"
 
-# -----------------------------
-# Styling / UI
-# -----------------------------
 def inject_global_css() -> None:
     st.markdown(
         """
@@ -73,9 +69,7 @@ def format_int(x) -> str:
     except Exception:
         return "—"
 
-# -----------------------------
-# Data loading (cached)
-# -----------------------------
+
 @st.cache_data(show_spinner=False)
 def _read_csv(path: Path) -> pd.DataFrame | None:
     if not path.exists():
@@ -89,7 +83,6 @@ def normalize_columns(df: pd.DataFrame) -> pd.DataFrame:
 
 def _coerce_bool_official(series: pd.Series) -> pd.Series:
     s = series.copy()
-    # MySQL world dataset uses 'T'/'F'
     if s.dtype == object:
         s = s.astype(str).str.strip().str.upper().replace({"TRUE":"T","FALSE":"F","YES":"T","NO":"F"})
         return s.isin(["T", "1", "Y"])
@@ -103,7 +96,6 @@ def get_data() -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame |
       - "cities", "countries", "languages", "worldcities"
     so pages can be opened directly (Streamlit Cloud users often do).
     """
-    # If already loaded, return from session_state
     keys = {"cities", "countries", "languages", "worldcities"}
     if keys.issubset(st.session_state.keys()):
         return (
@@ -113,12 +105,10 @@ def get_data() -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame |
             st.session_state["worldcities"],
         )
 
-    # Try common filenames (yours may be city.csv/country.csv/countrylanguage.csv)
     cities = _read_csv(DATA_DIR / "city.csv")
     countries = _read_csv(DATA_DIR / "country.csv")
     langs = _read_csv(DATA_DIR / "countrylanguage.csv")
 
-    # Optional lat/lon city dataset
     worldcities = _read_csv(DATA_DIR / "worldcities.csv")
 
     if cities is None or countries is None or langs is None:
@@ -134,7 +124,6 @@ def get_data() -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame |
     if worldcities is not None:
         worldcities = normalize_columns(worldcities)
 
-    # Store for all pages
     st.session_state["cities"] = cities
     st.session_state["countries"] = countries
     st.session_state["languages"] = langs
@@ -142,25 +131,18 @@ def get_data() -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame |
 
     return cities, countries, langs, worldcities
 
-# -----------------------------
-# Derived stats
-# -----------------------------
+
 def build_country_language_stats(countries: pd.DataFrame, langs: pd.DataFrame) -> pd.DataFrame:
     c = countries.copy()
     l = langs.copy()
 
-    # Standard expected cols in MySQL world dataset:
-    # countries: Code, Name, Continent, Region, Population
-    # langs: CountryCode, Language, IsOfficial, Percentage
     if "CountryCode" not in l.columns and "Code" in l.columns:
         l = l.rename(columns={"Code": "CountryCode"})
     if "Language" not in l.columns:
-        # best effort: find language-like col
         cand = [x for x in l.columns if x.lower() in ("language", "lang")]
         if cand:
             l = l.rename(columns={cand[0]: "Language"})
 
-    # Basic group stats
     grp = l.groupby("CountryCode", dropna=False)
     out = pd.DataFrame({
         "Code": grp["Language"].nunique(),
@@ -168,7 +150,6 @@ def build_country_language_stats(countries: pd.DataFrame, langs: pd.DataFrame) -
     out.index.name = "Code"
     out = out.reset_index()
 
-    # Official count
     if "IsOfficial" in l.columns:
         is_off = _coerce_bool_official(l["IsOfficial"])
         tmp = l.assign(_is_off=is_off).groupby("CountryCode")["_is_off"].sum().reset_index()
@@ -177,12 +158,10 @@ def build_country_language_stats(countries: pd.DataFrame, langs: pd.DataFrame) -
     else:
         out["n_official"] = np.nan
 
-    # Entropy (only if Percentage exists and has values)
     if "Percentage" in l.columns:
         perc = pd.to_numeric(l["Percentage"], errors="coerce")
         l2 = l.assign(_p=perc).dropna(subset=["_p"])
         if not l2.empty:
-            # Shannon entropy: -sum(p_i log p_i), p in [0,1]
             l2["_p"] = l2["_p"] / 100.0
             def _entropy(p):
                 p = p[p > 0]
@@ -195,13 +174,11 @@ def build_country_language_stats(countries: pd.DataFrame, langs: pd.DataFrame) -
     else:
         out["entropy"] = np.nan
 
-    # Merge country metadata
     if "Code" not in c.columns and "CountryCode" in c.columns:
         c = c.rename(columns={"CountryCode": "Code"})
     keep = [x for x in ["Code", "Name", "Continent", "Region", "Population"] if x in c.columns]
     out = out.merge(c[keep], on="Code", how="left")
 
-    # Fill missing numeric
     for col in ["n_languages", "n_official"]:
         if col in out.columns:
             out[col] = pd.to_numeric(out[col], errors="coerce").fillna(0)
@@ -216,11 +193,9 @@ def build_global_language_stats(langs: pd.DataFrame, countries: pd.DataFrame | N
     if "Language" not in l.columns:
         return pd.DataFrame(columns=["Language", "countries_spoken", "official_countries"])
 
-    # Count countries where language appears
     by_lang = l.groupby("Language")["CountryCode"].nunique().reset_index()
     by_lang.columns = ["Language", "countries_spoken"]
 
-    # Count where official
     if "IsOfficial" in l.columns:
         is_off = _coerce_bool_official(l["IsOfficial"])
         l2 = l.assign(_is_off=is_off)
