@@ -15,10 +15,8 @@ render_hero(
     pill="World Geo-Linguistic Dashboard",
 )
 
-# Load once (cached) and store in session_state for all pages
 cities, countries, langs, worldcities = get_data()
 
-# ---- Metadata (edit freely) ----
 STUDENT_NAME = "Ezzat Bachour"
 MAJOR = "B.Sc. Psychology"
 UNIVERSITY = "Leuphana University Lüneburg"
