@@ -1,40 +1,125 @@
-from __future__ import annotations
-
+import json
+import sqlite3
+from datetime import date
 from pathlib import Path
-import numpy as np
-import pandas as pd
+
 import streamlit as st
 
-DATA_DIR = Path(__file__).parent / "data"
+DB_DIR = Path("data")
+DB_PATH = DB_DIR / "users.db"
 
-def inject_global_css() -> None:
+DEFAULT_USER = {
+    "progress": 0,
+    "baseline": {},
+    "logs": [],
+    "actions": [],
+    "maintenance": {},
+    "final_message": ""
+}
+
+
+def ensure_db():
+    DB_DIR.mkdir(parents=True, exist_ok=True)
+    conn = sqlite3.connect(DB_PATH, check_same_thread=False)
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS users (id TEXT PRIMARY KEY, data TEXT)"
+    )
+    conn.commit()
+    return conn
+
+
+def load_user(user_id: str):
+    conn = ensure_db()
+    cur = conn.cursor()
+    cur.execute("SELECT data FROM users WHERE id=?", (user_id,))
+    row = cur.fetchone()
+    if row:
+        data = json.loads(row[0])
+        merged = DEFAULT_USER.copy()
+        merged.update(data)
+        return merged
+    return DEFAULT_USER.copy()
+
+
+def save_user(user_id: str, data: dict):
+    conn = ensure_db()
+    conn.execute(
+        "REPLACE INTO users (id, data) VALUES (?, ?)",
+        (user_id, json.dumps(data))
+    )
+    conn.commit()
+
+
+def today():
+    return str(date.today())
+
+
+def set_theme():
+    st.set_page_config(
+        page_title="Ocean Legacy Challenge",
+        page_icon="🌊",
+        layout="wide"
+    )
     st.markdown(
         """
-<style>
-/* Page padding */
-.block-container { padding-top: 1.2rem; padding-bottom: 2.5rem; max-width: 1200px; }
+        <style>
+        .stApp {
+            background: linear-gradient(180deg, #03111f 0%, #08243b 45%, #0d3853 100%);
+            color: #f3fbff;
+        }
+        .block-container {
+            padding-top: 2rem;
+            padding-bottom: 2rem;
+        }
+        div[data-testid="stMetric"] {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(144,224,239,0.18);
+            padding: 12px;
+            border-radius: 16px;
+        }
+        .ocean-card {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(144,224,239,0.18);
+            border-radius: 18px;
+            padding: 18px;
+            margin-bottom: 14px;
+        }
+        .hero-box {
+            background: linear-gradient(135deg, rgba(0,180,216,0.20), rgba(0,119,182,0.18));
+            border: 1px solid rgba(144,224,239,0.25);
+            border-radius: 24px;
+            padding: 28px;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
 
-/* Make Plotly charts blend in */
-[data-testid="stPlotlyChart"] > div { border-radius: 18px; overflow: hidden; }
 
-/* Slightly nicer sidebar */
-section[data-testid="stSidebar"] { border-right: 1px solid rgba(255,255,255,0.06); }
+def sidebar_header():
+    st.sidebar.title("🌊 Ocean Legacy")
+    st.sidebar.caption("Fashion choices, future oceans")
+    st.sidebar.markdown("---")
+    st.sidebar.markdown("**Project:** Ocean Legacy Challenge")
+    st.sidebar.markdown("**Target group:** University students (18–30)")
+    st.sidebar.markdown("**Goal:** Reduce fast-fashion consumption")
+    st.sidebar.markdown("---")
+    user_id = st.sidebar.text_input("Participant ID")
+    if user_id:
+        st.sidebar.success(f"Logged in as: {user_id}")
+    else:
+        st.sidebar.info("Enter your Participant ID to begin.")
+    return user_id
 
-/* Hero card */
-.pop-hero {
-  background: radial-gradient(1200px 600px at 20% 0%, rgba(120,70,255,0.28), rgba(0,0,0,0)) ,
-              linear-gradient(135deg, rgba(30,40,70,0.75), rgba(10,14,22,0.6));
-  border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 22px;
-  padding: 18px 18px;
-  margin: 6px 0 18px 0;
-}
-.pop-hero-top { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
-.pop-hero-title { font-size: 1.15rem; font-weight: 800; letter-spacing: 0.2px; opacity: 0.98; }
-.pop-hero-sub { margin-top: 6px; opacity: 0.86; font-size: 0.98rem; line-height: 1.35; }
-.pop-pill {
-  display:inline-block; padding: 4px 10px;
-  border-radius: 999px;
+
+def progress_label(progress: int):
+    labels = {
+        0: "Not started",
+        1: "Awareness completed",
+        2: "Action phase completed",
+        3: "Legacy plan completed"
+    }
+    return labels.get(progress, "In progress")  border-radius: 999px;
   background: rgba(255,255,255,0.08);
   border: 1px solid rgba(255,255,255,0.10);
   font-size: 0.85rem;
