@@ -61,6 +61,13 @@ st.markdown(
     """
 )
 
+st.markdown("### Data Privacy & Consent")
+st.info(
+    "**Participant Notice:** By proceeding with this intervention, you consent to the collection "
+    "of your anonymous behavioral responses for the purpose of this academic study. Your Participant ID "
+    "ensures your data remains pseudonymous. No personally identifiable information (PII) is required."
+)
+
 st.markdown("### Start here")
 if user_id:
     st.success("Open the left sidebar and begin with **Day 1 Awareness**.")
