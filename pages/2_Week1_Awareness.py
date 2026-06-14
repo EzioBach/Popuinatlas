@@ -28,54 +28,58 @@ st.markdown(
 st.markdown("### The opening prompt")
 st.info("“When I am your age, what kind of ocean will I inherit?”")
 
-st.markdown("### Psychological Baseline Assessment")
-st.write("Please indicate how strongly you agree or disagree with the following statements (1 = Strongly Disagree, 7 = Strongly Agree).")
+col1, col2 = st.columns(2)
 
-# Construct 1: Nature Relatedness (Emotional Connection)
-st.markdown("**Part 1: Connection to the Ocean Ecosystem**")
-nature_connection = st.slider(
-    "I feel a deep, personal connection to the natural environment and marine ecosystems.",
-    1, 7, 4
-)
-responsibility_feeling = st.slider(
-    "I believe my daily consumer choices directly impact the health of future oceans.",
-    1, 7, 4
-)
+with col1:
+    fast_fashion_items = st.number_input(
+        "How many fast-fashion items did you buy in the last 30 days?",
+        min_value=0, max_value=50, value=2
+    )
+    second_hand_items = st.number_input(
+        "How many second-hand items did you buy in the last 30 days?",
+        min_value=0, max_value=50, value=0
+    )
+    reuse_frequency = st.slider(
+        "How often do you rewear or restyle clothes you already own?",
+        1, 10, 5
+    )
+    ocean_concern = st.slider(
+        "How concerned are you about fashion's impact on oceans?",
+        1, 10, 6
+    )
 
-# Construct 2: Autonomous Motivation (SDT - Autonomy)
-st.markdown("**Part 2: Personal Values and Motivation**")
-autonomy_scale = st.slider(
-    "I want to reduce my fast-fashion consumption because it aligns with my core personal values, not just because others expect me to.",
-    1, 7, 4
-)
+with col2:
+    main_trigger = st.selectbox(
+        "What most often triggers fast-fashion buying?",
+        [
+            "Social media trends",
+            "Sales and discounts",
+            "Need for novelty",
+            "Peer pressure",
+            "Convenience",
+            "Special occasions"
+        ]
+    )
+    buying_feeling = st.selectbox(
+        "How do you usually feel before buying?",
+        ["Excited", "Pressured", "Bored", "Curious", "Insecure", "Neutral"]
+    )
+    post_buy_feeling = st.selectbox(
+        "How do you usually feel after buying?",
+        ["Satisfied", "Guilty", "Neutral", "Regretful", "Excited"]
+    )
+    commitment = st.slider(
+        "How committed are you to reducing fast fashion for 30 days?",
+        1, 10, 7
+    )
 
-# Construct 3: Perceived Competence (SDT - Competence)
-st.markdown("**Part 3: Behavioral Confidence**")
-competence_scale = st.slider(
-    "I feel confident in my ability to find and utilize sustainable fashion alternatives over the next 30 days.",
-    1, 7, 4
-)
-
-st.markdown("### Behavioral Audit")
-fast_fashion_items = st.number_input(
-    "Quantify your fast-fashion acquisitions: How many newly produced garments did you purchase in the last 30 days?",
-    min_value=0, max_value=50, value=2
-)
-
-main_trigger = st.selectbox(
-    "Identify your primary behavioral trigger for fast-fashion consumption:",
-    [
-        "Algorithmic social media trends",
-        "Scarcity marketing (Sales/Discounts)",
-        "Psychological need for novelty",
-        "Social conformity / Peer pressure",
-        "Emotional regulation (Stress/Boredom buying)"
-    ]
+reflection = st.text_area(
+    "What did you realize about your clothing habits today?"
 )
 
 goal = st.text_input(
-    "Implementation Goal",
-    placeholder="Define a specific, measurable objective for the next 30 days..."
+    "Write one personal goal for this challenge",
+    placeholder="Example: I will avoid buying any new fast-fashion item for 30 days."
 )
 
 if st.button("Save Day 1", use_container_width=True):
