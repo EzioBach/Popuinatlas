@@ -28,10 +28,7 @@ def ensure_db():
     conn.commit()
     return conn
 
-def init_session():
-    if "user_id" not in st.session_state:
-        st.session_state["user_id"] = ""
-        
+
 def load_user(user_id: str):
     conn = ensure_db()
     cur = conn.cursor()
@@ -191,12 +188,12 @@ def sidebar_header():
     st.sidebar.markdown("**Team:** Andrea, Ezzat, Leen, Maha.")
     st.sidebar.markdown("---")
     st.sidebar.image("https://upload.wikimedia.org/wikipedia/commons/9/93/Leuphana_Universität_Lüneburg_Logo_2020.svg", width=140)
-    user_id = st.sidebar.text_input("Participant ID", key="user_id_input")
-if user_id:
-    st.session_state["user_id"] = user_id
-else:
-    user_id = st.session_state.get("user_id", "")
-return user_id
+    user_id = st.sidebar.text_input("Participant ID")
+    if user_id:
+        st.sidebar.success(f"Logged in as: {user_id}")
+    else:
+        st.sidebar.info("Enter your Participant ID to begin.")
+    return user_id
 
 
 def progress_label(progress: int):
