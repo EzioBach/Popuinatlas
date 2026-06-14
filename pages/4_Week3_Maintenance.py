@@ -7,7 +7,7 @@ from utils import set_theme, sidebar_header, load_user, save_user, today, send_r
 set_theme()
 user_id = sidebar_header()
 
-st.title("💙 Day 3 — Legacy Plan & Final Message")
+st.title("💙 Week 3 — Legacy Plan & Final Message")
 st.caption("Build long-term rules and close the challenge with responsibility")
 
 if not user_id:
@@ -17,7 +17,7 @@ if not user_id:
 data = load_user(user_id)
 
 if data["progress"] < 2:
-    st.warning("Complete Day 2 first.")
+    st.warning("Complete week 2 first.")
     st.stop()
 
 st.markdown("### Reflection")
