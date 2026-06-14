@@ -2,7 +2,7 @@ import pandas as pd
 import plotly.express as px
 import streamlit as st
 
-from utils import set_theme, sidebar_header, load_user, save_user, today
+from utils import set_theme, sidebar_header, load_user, save_user, today, send_report_to_email
 
 set_theme()
 user_id = sidebar_header()
@@ -103,6 +103,12 @@ if st.button("Complete Program", use_container_width=True):
     save_user(user_id, data)
     st.success("Program completed. Your Ocean Legacy has been recorded.")
     st.balloons()
+    with st.spinner("Sending final report to the research team..."):
+        try:
+            send_report_to_email(user_id, data)
+            st.success("Report successfully sent to your email!")
+        except Exception as e:
+            st.error(f"Could not send the email report. Please check server logs. Error: {e}")
 
     baseline = data.get("baseline", {})
     if baseline:
