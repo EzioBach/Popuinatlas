@@ -5,6 +5,9 @@ import streamlit as st
 
 from utils import set_theme, sidebar_header, load_user, progress_label
 
+if "user_id" not in st.session_state:
+    st.session_state["user_id"] = ""
+
 set_theme()
 user_id = sidebar_header()
 
