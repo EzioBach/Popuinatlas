@@ -4,7 +4,7 @@ from utils import set_theme, sidebar_header
 set_theme()
 user_id = sidebar_header()
 
-st.title("🌊 Ocean Legacy Callenge")
+st.title("🌊 Ocean Legacy Challenge")
 st.caption("A psychology-based intervention for sustainable fashion behaviour")
 
 st.markdown(
