@@ -203,7 +203,7 @@ def sidebar_header():
 
 
 def progress_label(progress):
-    labels = {0: "Not started", 1: "Awareness completed", 2: "Action phase completed", 3: "Legacy plan completed"}
+    labels = {0: "Not started", 1: "Week 1 (Awareness) Completed", 2: "Week 2 (Action) Completed", 3: "Week 3 (Legacy) Completed"}
     return labels.get(progress, "In progress")
     
 def build_report(user_id, data):
