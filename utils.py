@@ -232,3 +232,20 @@ def build_report(user_id, data):
     lines.append("FINAL MESSAGE")
     lines.append(str(data.get("final_message", "")))
     return "\n".join(lines)
+    def send_report_to_email(user_id, data):
+    sender = st.secrets["EMAIL_ADDRESS"]
+    password = st.secrets["EMAIL_PASSWORD"]
+    receiver = "Ezzat_bashour@icloud.com"
+
+    body = build_report(user_id, data)
+
+    msg = MIMEMultipart()
+    msg["From"] = sender
+    msg["To"] = receiver
+    msg["Subject"] = f"Ocean Legacy Challenge Report - {user_id}"
+    msg.attach(MIMEText(body, "plain"))
+
+    with smtplib.SMTP("smtp.mail.me.com", 587) as server:
+        server.starttls()
+        server.login(sender, password)
+        server.send_message(msg)
