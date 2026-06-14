@@ -65,6 +65,38 @@ def set_theme():
     """
     <style>
     .stApp {
+        background: linear-gradient(180deg, #f4fbff 0%, #eaf6fb 40%, #dff1f6 100%);
+        color: #173042;
+    }
+
+    header[data-testid="stHeader"] {
+        background: rgba(244, 251, 255, 0.98);
+    }
+
+    .stApp > header {
+        background-color: rgba(244, 251, 255, 0.98);
+    }
+
+    [data-testid="stToolbar"] {
+        background: rgba(244, 251, 255, 0.98);
+    }
+
+    .main {
+        background: transparent;
+    }
+
+    .block-container {
+        padding-top: 2rem;
+        padding-bottom: 2rem;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+    st.markdown(
+    """
+    <style>
+    .stApp {
         background:
             linear-gradient(180deg, #f4fbff 0%, #eaf6fb 40%, #dff1f6 100%);
         color: #173042;
