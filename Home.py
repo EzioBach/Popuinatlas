@@ -44,9 +44,9 @@ with col3:
 st.markdown("### How the challenge works")
 st.markdown(
     """
-    1. **Day 1 — Awareness & Baseline:** reflect on current clothing habits and triggers.  
-    2. **Day 2 — Sustainable Action:** complete practical alternatives to fast fashion.  
-    3. **Day 3 — Legacy Plan:** create personal rules and write a message to the child.  
+    1. **Week 1 — Awareness & Baseline:** reflect on current clothing habits and triggers.  
+    2. **Week 2 — Sustainable Action:** complete practical alternatives to fast fashion.  
+    3. **Week 3 — Legacy Plan:** create personal rules and write a message to the child.  
     4. **Dashboard:** track progress, reflections, and behaviour change over time.
     """
 )
