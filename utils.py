@@ -101,10 +101,13 @@ def sidebar_header():
     st.sidebar.title("🌊 Ocean Legacy")
     st.sidebar.caption("Fashion choices, future oceans")
     st.sidebar.markdown("---")
+    st.sidebar.markdown("**Leuphana University**")
     st.sidebar.markdown("**Project:** Ocean Legacy Challenge")
     st.sidebar.markdown("**Target group:** University students (18–30)")
     st.sidebar.markdown("**Goal:** Reduce fast-fashion consumption")
+    st.sidebar.markdown("**Team:** Andrea, Ezzat, Leen, Maha.")
     st.sidebar.markdown("---")
+    st.sidebar.image("https://upload.wikimedia.org/wikipedia/commons/9/93/Leuphana_Universität_Lüneburg_Logo_2020.svg", width=140)
     user_id = st.sidebar.text_input("Participant ID")
     if user_id:
         st.sidebar.success(f"Logged in as: {user_id}")
