@@ -18,7 +18,7 @@ st.markdown(
         This challenge helps university students reflect on fast-fashion behaviour,
         take practical sustainable actions, and build long-term habits that reduce
         harm to ocean ecosystems.
-                <p style='margin:0;'>Leuphana University · Group 5 · Andrea · Ezzat · Leen · Maha</p>
+                <p style='margin:0;'>Leuphana University · Group 5 · Andrea · Ezzat Bachour · Leen · Maha</p>
         </p>
     </div>
    
