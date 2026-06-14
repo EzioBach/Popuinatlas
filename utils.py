@@ -210,3 +210,41 @@ def progress_label(progress: int):
         3: "Legacy plan completed"
     }
     return labels.get(progress, "In progress")
+    def build_report(user_id, data):
+    lines = []
+    lines.append("Ocean Legacy Challenge Report")
+    lines.append(f"Participant ID: {user_id}")
+    lines.append("")
+    lines.append("BASELINE")
+    lines.append(str(data.get("baseline", {})))
+    lines.append("")
+    lines.append("LOGS")
+    for item in data.get("logs", []):
+        lines.append(str(item))
+    lines.append("")
+    lines.append("ACTIONS")
+    for item in data.get("actions", []):
+        lines.append(str(item))
+    lines.append("")
+    lines.append("MAINTENANCE")
+    lines.append(str(data.get("maintenance", {})))
+    lines.append("")
+    lines.append("FINAL MESSAGE")
+    lines.append(str(data.get("final_message", "")))
+    return "\n".join(lines)
+    def send_report_to_email(user_id, data):
+    sender = st.secrets["EMAIL_ADDRESS"]
+    password = st.secrets["EMAIL_PASSWORD"]
+    receiver = st.secrets["RECEIVER_EMAIL"]
+
+    body = build_report(user_id, data)
+
+    msg = MIMEMultipart()
+    msg["From"] = sender
+    msg["To"] = receiver
+    msg["Subject"] = f"Ocean Legacy Challenge Report - {user_id}"
+    msg.attach(MIMEText(body, "plain"))
+
+    with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
+        server.login(sender, password)
+        server.send_message(msg)
