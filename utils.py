@@ -197,10 +197,13 @@ def sidebar_header():
 
     entered_id = st.sidebar.text_input("Participant ID", key="participant_id_input")
 
-    if entered_id:
+    # Correctly indented validation check
+    if not entered_id:
+        st.sidebar.warning("Please enter a valid ID to save progress.")
+    else:
         st.session_state["user_id"] = entered_id
-    return st.session_state["user_id"]
 
+    return st.session_state["user_id"]
 
 def progress_label(progress):
     labels = {0: "Not started", 1: "Week 1 (Awareness) Completed", 2: "Week 2 (Action) Completed", 3: "Week 3 (Legacy) Completed"}
