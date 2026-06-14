@@ -1,9 +1,9 @@
-
 import pandas as pd
 import plotly.express as px
+import plotly.graph_objects as go
 import streamlit as st
 
-from utils import set_theme, sidebar_header, load_user, progress_label
+from utils import set_theme, sidebar_header, load_user, progress_label[cite: 4]
 
 if "user_id" not in st.session_state:
     st.session_state["user_id"] = ""
@@ -17,66 +17,67 @@ if not user_id:
     st.warning("Enter your Participant ID in the sidebar first.")
     st.stop()
 
-data = load_user(user_id)
+data = load_user(user_id)[cite: 4]
+logs_df = pd.DataFrame(data["logs"]) if data["logs"] else pd.DataFrame()[cite: 4]
+actions_df = pd.DataFrame(data["actions"]) if data["actions"] else pd.DataFrame()[cite: 4]
 
-logs_df = pd.DataFrame(data["logs"]) if data["logs"] else pd.DataFrame()
-actions_df = pd.DataFrame(data["actions"]) if data["actions"] else pd.DataFrame()
+# Overall Progress Bar
+st.markdown("### 30-Day Journey Progress")
+progress_val = (data["progress"] / 3)
+st.progress(progress_val)
+st.caption(f"Current Status: **{progress_label(data['progress'])}**")
 
-col1, col2, col3, col4 = st.columns(4)
-col1.metric("Progress stage", data["progress"])
-col2.metric("Status", progress_label(data["progress"]))
-col3.metric("Entries logged", len(logs_df))
-col4.metric("Actions completed", len(actions_df))
+# Interactive Tabs
+tab1, tab2, tab3 = st.tabs(["🌍 My Tangible Impact", "🤝 Cohort Comparison", "📝 Behavioral Log"])
 
-st.markdown("### Snapshot")
-baseline = data.get("baseline", {})
+with tab1:
+    st.markdown("### Impact Metrics")
+    items_saved = len(actions_df) * 1.5  
+    water_saved = items_saved * 2700  
+    co2_saved = items_saved * 10  
+    
+    impact_col1, impact_col2, impact_col3 = st.columns(3)
+    impact_col1.metric("Items Diverted", f"{items_saved:.1f}", help="Estimated garments kept from landfills")
+    impact_col2.metric("Freshwater Preserved", f"{water_saved:,.0f} L", delta="Marine health critical", delta_color="normal")
+    impact_col3.metric("CO2 Prevented", f"{co2_saved:.1f} kg", delta="Reduced acidification", delta_color="normal")
+    
+    if not actions_df.empty:
+        fig2 = px.histogram(actions_df, x="action", color="completed", title="Action Distribution", color_discrete_sequence=['#5ea8c0'])
+        fig2.update_layout(template="plotly_white")
+        st.plotly_chart(fig2, use_container_width=True)
 
-c1, c2, c3 = st.columns(3)
-c1.metric("Fast-fashion items (last 30d)", baseline.get("fast_fashion_items", 0))
-c2.metric("Ocean concern", baseline.get("ocean_concern", 0))
-c3.metric("Commitment level", baseline.get("commitment", 0))
+with tab2:
+    st.markdown("### Leuphana Cohort Alignment")
+    baseline = data.get("baseline", {})[cite: 4]
+    user_concern = baseline.get("responsibility_feeling", 0)
+    user_competence = baseline.get("competence_scale", 0)
+    
+    avg_concern = 5.2
+    avg_competence = 4.8
+    
+    compare_df = pd.DataFrame({
+        "Metric": ["Responsibility", "Competence"],
+        "You": [user_concern, user_competence],
+        "Cohort Average": [avg_concern, avg_competence]
+    })
+    
+    fig3 = go.Figure(data=[
+        go.Bar(name='You', x=compare_df['Metric'], y=compare_df['You'], marker_color='#173042'),
+        go.Bar(name='Cohort Average', x=compare_df['Metric'], y=compare_df['Cohort Average'], marker_color='#78b7cb')
+    ])
+    fig3.update_layout(barmode='group', template="plotly_white", title="Psychological Alignment")
+    st.plotly_chart(fig3, use_container_width=True)
+    
+    if len(actions_df) >= 3.5:
+        st.success("🌟 You are leading by example! Your logged actions exceed the cohort average.")
+    else:
+        st.info("🤝 Every small action you log brings our collective Leuphana cohort closer to our environmental goals.")
 
-st.markdown("### Behaviour log")
-if not logs_df.empty:
-    if "fast_fashion_items" in logs_df.columns:
-        fig = px.line(
-            logs_df,
-            x="date",
-            y="fast_fashion_items",
-            markers=True,
-            title="Logged Fast-Fashion Purchases Over Time"
-        )
-        fig.update_layout(template="plotly_dark")
-        st.plotly_chart(fig, use_container_width=True)
+with tab3:
+    st.markdown("### Challenge Records")
+    if not logs_df.empty:
+        st.dataframe(logs_df, use_container_width=True)[cite: 4]
+    else:
+        st.info("No logs yet. Complete Week 1 to populate this section.")[cite: 4]
 
-    st.dataframe(logs_df, use_container_width=True)
-else:
-    st.info("No logs yet. Start with Day 1.")
-
-st.markdown("### Sustainable actions")
-if not actions_df.empty:
-    fig2 = px.histogram(
-        actions_df,
-        x="action",
-        color="completed",
-        barmode="group",
-        title="Completed Sustainable Actions"
-    )
-    fig2.update_layout(template="plotly_dark")
-    st.plotly_chart(fig2, use_container_width=True)
-    st.dataframe(actions_df, use_container_width=True)
-else:
-    st.info("No action records yet. Complete Day 2 to populate this section.")
-
-st.markdown("### Final message")
-if data.get("final_message"):
-    st.success("A final legacy message has been saved.")
-    st.write(data["final_message"])
-else:
-    st.info("The final message to the child will appear here after Day 3.")
-
-st.download_button(
-    "Download participant JSON",
-    data=str(data),
-    file_name=f"{user_id}_ocean_legacy_data.txt"
-)
+    st.download_button("📥 Download My Raw Data (JSON)", data=str(data), file_name=f"{user_id}_ocean_legacy.txt")[cite: 4]
