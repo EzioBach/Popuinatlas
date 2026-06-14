@@ -15,15 +15,14 @@ st.markdown(
         This challenge helps university students reflect on fast-fashion behaviour,
         take practical sustainable actions, and build long-term habits that reduce
         harm to ocean ecosystems.
-        </p>
-    </div>
-    <div class='hero-box'>
         <div style='display:flex;align-items:center;gap:18px;flex-wrap:wrap;'>
             <img src='https://pplx-res.cloudinary.com/image/upload/pplx_search_images/ad174507961c5b77cb7fff0416b65da61a63cff3.jpg' width='120' style='border-radius:14px;border:1px solid rgba(255,255,255,0.2);'>
             <div>
                 <h2 style='margin:0 0 6px 0;'>What kind of ocean will future generations inherit?</h2>
                 <p style='margin:0;'>Leuphana University · Group 5 · Andrea · Ezzat · Leen · Maha</p>
-            </div>
+        </p>
+    </div>
+   
     """,
     unsafe_allow_html=True
 )
