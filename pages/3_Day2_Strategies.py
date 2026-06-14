@@ -47,7 +47,7 @@ temptation_today = st.selectbox(
 )
 
 if_trigger = st.text_input(
-    "If-then plan: IF I want to buy something new, THEN I will..."
+    "Implementation Intention (If-Then Plan): IF I am triggered to buy fast fashion, THEN I will..."
 )
 
 best_action = st.selectbox(
