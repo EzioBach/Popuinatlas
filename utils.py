@@ -61,7 +61,7 @@ def set_theme():
         page_icon="🌊",
         layout="wide"
     )
-    st.markdown(
+   st.markdown(
     """
     <style>
     .stApp {
