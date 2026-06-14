@@ -7,6 +7,7 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import streamlit as st
 
+
 DB_DIR = Path("data")
 DB_PATH = DB_DIR / "users.db"
 
@@ -201,14 +202,8 @@ def sidebar_header():
 
     return st.session_state["user_id"]
 
-
-def progress_label(progress: int):
-    labels = {
-        0: "Not started",
-        1: "Awareness completed",
-        2: "Action phase completed",
-        3: "Legacy plan completed"
-    }
+def progress_label(progress):
+    labels = {0: "Not started", 1: "Awareness completed", 2: "Action phase completed", 3: "Legacy plan completed"}
     return labels.get(progress, "In progress")
 def build_report(user_id, data):
     lines = []
@@ -232,10 +227,11 @@ def build_report(user_id, data):
     lines.append("FINAL MESSAGE")
     lines.append(str(data.get("final_message", "")))
     return "\n".join(lines)
+    
     def send_report_to_email(user_id, data):
     sender = st.secrets["EMAIL_ADDRESS"]
     password = st.secrets["EMAIL_PASSWORD"]
-    receiver = "Ezzat_bashour@icloud.com"
+    receiver = "Ezzat.bashour96@gmail.com"
 
     body = build_report(user_id, data)
 
@@ -245,7 +241,6 @@ def build_report(user_id, data):
     msg["Subject"] = f"Ocean Legacy Challenge Report - {user_id}"
     msg.attach(MIMEText(body, "plain"))
 
-    with smtplib.SMTP("smtp.mail.me.com", 587) as server:
-        server.starttls()
+    with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
         server.login(sender, password)
         server.send_message(msg)
