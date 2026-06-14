@@ -199,9 +199,6 @@ def sidebar_header():
 
     if entered_id:
         st.session_state["user_id"] = entered_id
-        if not entered_id:
-    st.sidebar.warning("Please enter a valid ID to save progress.")
-    
     return st.session_state["user_id"]
 
 
