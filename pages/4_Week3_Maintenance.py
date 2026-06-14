@@ -2,7 +2,7 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
-from utils import set_theme, sidebar_header, load_user, save_user, today
+from utils import set_theme, sidebar_header, load_user, save_user, today, send_report_to_email
 
 if "user_id" not in st.session_state:
     st.session_state["user_id"] = ""
@@ -56,7 +56,7 @@ final_message = st.text_area(
     placeholder="Write a brief message to the next generation regarding the ocean..."
 )
 
-if st.button("🏁 Submit T2 & View Results", type="primary", use_container_width=True):
+if st.button("🏁 Submit T2 & Generate Report", type="primary"):
     if not final_message.strip():
         st.error("Please complete your final message.")
         st.stop()
@@ -74,6 +74,14 @@ if st.button("🏁 Submit T2 & View Results", type="primary", use_container_widt
     save_user(user_id, data)
     st.success("Study Completed! Your data has been recorded.")
     st.balloons()
+    
+    # --- EMAIL TRIGGER BLOCK ---
+    with st.spinner("Transmitting encrypted data to research team..."):
+        try:
+            send_report_to_email(user_id, data)
+            st.success("📧 Data successfully emailed to the research team!")
+        except Exception as e:
+            st.error(f"Email failed to send. Please check your secrets.toml file and Gmail App Passwords. Error: {e}")
 
     # --- PRE/POST COMPARISON GENERATION ---
     baseline = data.get("baseline", {})
@@ -97,4 +105,4 @@ if st.button("🏁 Submit T2 & View Results", type="primary", use_container_widt
             go.Bar(name='T2 (Post-Test)', x=compare_df['Metric'], y=compare_df['T2 (Post-Test)'], marker_color='#173042')
         ])
         fig.update_layout(barmode='group', template="plotly_white", title="Pre and Post Intervention Comparison")
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig)
