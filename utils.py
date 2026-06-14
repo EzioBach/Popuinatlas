@@ -66,9 +66,8 @@ def set_theme():
     <style>
     .stApp {
         background:
-            radial-gradient(circle at top, rgba(35, 68, 102, 0.28), transparent 35%),
-            linear-gradient(180deg, #07111f 0%, #091a2d 45%, #0b2338 100%);
-        color: #edf4f8;
+            linear-gradient(180deg, #f4fbff 0%, #eaf6fb 40%, #dff1f6 100%);
+        color: #173042;
     }
 
     .main {
@@ -81,61 +80,63 @@ def set_theme():
     }
 
     h1, h2, h3, h4, h5, h6 {
-        color: #f4f8fb;
+        color: #173042;
     }
 
     p, li, label, span, div {
-        color: #d9e5ec;
+        color: #2d465a;
     }
 
     .hero-box {
-        background: linear-gradient(135deg, rgba(13, 40, 67, 0.88), rgba(19, 58, 88, 0.78));
-        border: 1px solid rgba(157, 196, 214, 0.16);
+        background: rgba(255, 255, 255, 0.72);
+        border: 1px solid rgba(118, 168, 187, 0.22);
         border-radius: 24px;
         padding: 28px;
-        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.18);
+        box-shadow: 0 10px 24px rgba(32, 70, 88, 0.08);
+        backdrop-filter: blur(6px);
     }
 
     .ocean-card {
-        background: rgba(15, 36, 57, 0.80);
-        border: 1px solid rgba(157, 196, 214, 0.14);
+        background: rgba(255, 255, 255, 0.82);
+        border: 1px solid rgba(118, 168, 187, 0.18);
         border-radius: 18px;
         padding: 18px;
         margin-bottom: 14px;
+        box-shadow: 0 8px 18px rgba(32, 70, 88, 0.06);
     }
 
     .team-pill {
         display: inline-block;
         padding: 0.35rem 0.7rem;
         border-radius: 999px;
-        background: rgba(255, 255, 255, 0.06);
-        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(225, 242, 247, 0.95);
+        border: 1px solid rgba(118, 168, 187, 0.18);
         font-size: 0.85rem;
         margin-right: 0.4rem;
         margin-bottom: 0.4rem;
-        color: #edf4f8;
+        color: #173042;
     }
 
     .stSidebar {
-        background: linear-gradient(180deg, #081224 0%, #0a1b2f 100%);
+        background: linear-gradient(180deg, #f8fcfe 0%, #edf8fb 100%);
     }
 
     [data-testid="stMetric"] {
-        background: rgba(14, 34, 53, 0.80);
-        border: 1px solid rgba(157, 196, 214, 0.12);
+        background: rgba(255, 255, 255, 0.82);
+        border: 1px solid rgba(118, 168, 187, 0.16);
         border-radius: 16px;
         padding: 0.6rem 0.8rem;
     }
 
     .stButton > button {
-        background: linear-gradient(90deg, #2b5d7d, #3e7f96);
+        background: linear-gradient(90deg, #78b7cb, #5ea8c0);
         color: white;
         border: none;
         border-radius: 12px;
     }
 
     .stButton > button:hover {
-        background: linear-gradient(90deg, #356b8e, #4a8aa2);
+        background: linear-gradient(90deg, #6aaac0, #4f9db7);
         color: white;
     }
     </style>
