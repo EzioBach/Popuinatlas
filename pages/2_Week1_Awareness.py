@@ -8,64 +8,48 @@ if "user_id" not in st.session_state:
 set_theme()
 user_id = sidebar_header()
 
-st.title("🌍 Week 1 — Awareness & Baseline")
-st.caption("Understand your current fashion habits and how they connect to ocean health")
+st.title("📋 T1 Baseline Assessment")
+st.caption("Phase 1: Understanding current behaviours and psychological drivers")
 
 if not user_id:
     st.warning("Enter your Participant ID in the sidebar first.")
     st.stop()
 
-with st.expander("📖 Read: Why are we measuring this?", expanded=False):
-    st.write(
-        "To create lasting behavioral change, we look at **Self-Determination Theory**. "
-        "By understanding your autonomy (your personal values), competence (your confidence), "
-        "and relatedness (your connection to nature and others), we can tailor this 30-day "
-        "journey to be much more effective."
-    )
+st.markdown("### Section A: Psychological Assessment")
+st.write("Indicate your agreement (1 = Strongly Disagree, 7 = Strongly Agree).")
 
-st.markdown("### Psychological Baseline Assessment")
-st.write("Indicate how strongly you agree with the following (1 = Strongly Disagree, 7 = Strongly Agree).")
+col1, col2 = st.columns(2)
+with col1:
+    st.markdown("**Emotional & Nature Connection**")
+    nature_conn = st.slider("1. I feel a deep emotional connection to marine ecosystems.", 1, 7, 4)
+    future_gen = st.slider("2. I feel a moral obligation to protect the oceans for future generations.", 1, 7, 4)
+    resp_feel = st.slider("3. My personal clothing choices directly impact ocean health.", 1, 7, 4)
 
-col_a, col_b = st.columns(2)
-with col_a:
-    st.markdown("**Nature Relatedness & Responsibility**")
-    nature_connection = st.slider("I feel a deep, personal connection to marine ecosystems.", 1, 7, 4)
-    responsibility_feeling = st.slider("My daily consumer choices directly impact future oceans.", 1, 7, 4)
+with col2:
+    st.markdown("**Motivation & Competence (SDT)**")
+    autonomy = st.slider("4. I want to change my habits because it aligns with my personal values.", 1, 7, 4)
+    competence = st.slider("5. I am confident I know how to find sustainable fashion alternatives.", 1, 7, 4)
+    social_norm = st.slider("6. Most people my age care about sustainable fashion.", 1, 7, 4)
 
-with col_b:
-    st.markdown("**Autonomy & Competence**")
-    autonomy_scale = st.slider("I want to reduce fast-fashion because it aligns with my personal values.", 1, 7, 4)
-    competence_scale = st.slider("I feel confident in my ability to utilize sustainable fashion alternatives.", 1, 7, 4)
-
-st.markdown("### Behavioral Audit")
+st.markdown("### Section B: Behavioural Audit")
 fast_fashion_items = st.number_input(
     "How many newly produced garments did you purchase in the last 30 days?",
     min_value=0, max_value=50, value=2
 )
 
-# Extended to multiselect for more options
 main_triggers = st.multiselect(
-    "Identify your primary behavioral triggers for fast-fashion consumption (Select all that apply):",
-    [
-        "Algorithmic social media trends",
-        "Scarcity marketing (Sales/Discounts)",
-        "Psychological need for novelty",
-        "Social conformity / Peer pressure",
-        "Emotional regulation (Stress/Boredom buying)",
-        "Special events / One-time occasions"
-    ],
-    default=["Psychological need for novelty"]
-)
-
-goal = st.text_input(
-    "Implementation Goal",
-    placeholder="Example: I will unsubscribed from 3 fast-fashion email lists today."
+    "Primary triggers for fast-fashion consumption (Select all that apply):",
+    ["Social media trends", "Sales/Discounts", "Need for novelty", "Peer pressure", "Stress/Boredom buying"]
 )
 
 st.markdown("### Your Psychological Profile")
-if st.button("📊 Generate My Profile Visual", use_container_width=True):
-    categories = ['Nature Connection', 'Responsibility', 'Autonomy', 'Competence']
-    values = [nature_connection, responsibility_feeling, autonomy_scale, competence_scale]
+if st.button("📊 Generate My Profile Visual"):
+    categories = [
+        'Nature Connection', 'Future Gen Obligation', 
+        'Responsibility', 'Autonomy', 
+        'Competence', 'Social Norms'
+    ]
+    values = [nature_conn, future_gen, resp_feel, autonomy, competence, social_norm]
     
     fig = go.Figure()
     fig.add_trace(go.Scatterpolar(
@@ -83,29 +67,23 @@ if st.button("📊 Generate My Profile Visual", use_container_width=True):
     )
     st.plotly_chart(fig, use_container_width=True)
 
-if st.button("Save Week 1 Baseline", type="primary", use_container_width=True):
-    if not goal.strip():
-        st.error("Please write a personal goal before saving.")
-        st.stop()
-
-    data = load_user(user_id)[cite: 3]
-    data["progress"] = max(data["progress"], 1)[cite: 3]
+if st.button("💾 Save T1 Baseline & Lock Data", type="primary"):
+    data = load_user(user_id)
+    data["progress"] = max(data["progress"], 1)
 
     data["baseline"] = {
-        "nature_connection": nature_connection,
-        "responsibility_feeling": responsibility_feeling,
-        "autonomy_scale": autonomy_scale,
-        "competence_scale": competence_scale,
+        "nature_conn": nature_conn,
+        "future_gen": future_gen,
+        "resp_feel": resp_feel,
+        "autonomy": autonomy,
+        "competence": competence,
+        "social_norm": social_norm,
         "fast_fashion_items": fast_fashion_items,
-        "main_triggers": main_triggers,
-        "goal": goal
-    }[cite: 3]
+        "main_triggers": main_triggers
+    }
 
-    data["logs"].append({
-        "date": today(),
-        "phase": "week1_awareness",
-        "goal": goal
-    })[cite: 3]
-
-    save_user(user_id, data)[cite: 3]
-    st.success("Week 1 saved. You have completed the awareness stage.")
+    data["logs"].append({"date": today(), "phase": "T1_baseline_complete"})
+    save_user(user_id, data)
+    
+    st.success("T1 Baseline successfully saved. Your psychological profile is locked.")
+    st.balloons()
