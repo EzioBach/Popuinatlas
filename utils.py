@@ -19,7 +19,7 @@ DEFAULT_USER = {
     "maintenance": {},
     "final_message": ""
 }
-TEAM = ["Leen", "Andrea", "Ezzat", "Maha"]
+TEAM = ["Andrea Andriamalala", "Ezzat Bachour", "Leen Ghafar", "Maha El kadiri"]
 
 
 def ensure_db():
