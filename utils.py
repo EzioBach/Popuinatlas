@@ -62,39 +62,86 @@ def set_theme():
         layout="wide"
     )
     st.markdown(
-        """
-        <style>
-        .stApp {
-            background: linear-gradient(180deg, #03111f 0%, #08243b 45%, #0d3853 100%);
-            color: #f3fbff;
-        }
-        .block-container {
-            padding-top: 2rem;
-            padding-bottom: 2rem;
-        }
-        div[data-testid="stMetric"] {
-            background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(144,224,239,0.18);
-            padding: 12px;
-            border-radius: 16px;
-        }
-        .ocean-card {
-            background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(144,224,239,0.18);
-            border-radius: 18px;
-            padding: 18px;
-            margin-bottom: 14px;
-        }
-        .hero-box {
-            background: linear-gradient(135deg, rgba(0,180,216,0.20), rgba(0,119,182,0.18));
-            border: 1px solid rgba(144,224,239,0.25);
-            border-radius: 24px;
-            padding: 28px;
-        }
-        </style>
-        """,
-        unsafe_allow_html=True
-    )
+    """
+    <style>
+    .stApp {
+        background:
+            radial-gradient(circle at top, rgba(35, 68, 102, 0.28), transparent 35%),
+            linear-gradient(180deg, #07111f 0%, #091a2d 45%, #0b2338 100%);
+        color: #edf4f8;
+    }
+
+    .main {
+        background: transparent;
+    }
+
+    .block-container {
+        padding-top: 2rem;
+        padding-bottom: 2rem;
+    }
+
+    h1, h2, h3, h4, h5, h6 {
+        color: #f4f8fb;
+    }
+
+    p, li, label, span, div {
+        color: #d9e5ec;
+    }
+
+    .hero-box {
+        background: linear-gradient(135deg, rgba(13, 40, 67, 0.88), rgba(19, 58, 88, 0.78));
+        border: 1px solid rgba(157, 196, 214, 0.16);
+        border-radius: 24px;
+        padding: 28px;
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.18);
+    }
+
+    .ocean-card {
+        background: rgba(15, 36, 57, 0.80);
+        border: 1px solid rgba(157, 196, 214, 0.14);
+        border-radius: 18px;
+        padding: 18px;
+        margin-bottom: 14px;
+    }
+
+    .team-pill {
+        display: inline-block;
+        padding: 0.35rem 0.7rem;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        font-size: 0.85rem;
+        margin-right: 0.4rem;
+        margin-bottom: 0.4rem;
+        color: #edf4f8;
+    }
+
+    .stSidebar {
+        background: linear-gradient(180deg, #081224 0%, #0a1b2f 100%);
+    }
+
+    [data-testid="stMetric"] {
+        background: rgba(14, 34, 53, 0.80);
+        border: 1px solid rgba(157, 196, 214, 0.12);
+        border-radius: 16px;
+        padding: 0.6rem 0.8rem;
+    }
+
+    .stButton > button {
+        background: linear-gradient(90deg, #2b5d7d, #3e7f96);
+        color: white;
+        border: none;
+        border-radius: 12px;
+    }
+
+    .stButton > button:hover {
+        background: linear-gradient(90deg, #356b8e, #4a8aa2);
+        color: white;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
 
 
 def sidebar_header():
