@@ -66,3 +66,8 @@ if user_id:
     st.success("Open the left sidebar and begin with **Day 1 Awareness**.")
 else:
     st.info("Enter a Participant ID in the sidebar to unlock the full journey.")
+st.markdown("### Our team")
+st.markdown(
+    "<span class='team-pill'>Leen</span><span class='team-pill'>Andrea</span><span class='team-pill'>Ezzat</span><span class='team-pill'>Maha</span>",
+    unsafe_allow_html=True,
+)
