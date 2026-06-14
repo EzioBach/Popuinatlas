@@ -205,6 +205,7 @@ def sidebar_header():
 def progress_label(progress):
     labels = {0: "Not started", 1: "Awareness completed", 2: "Action phase completed", 3: "Legacy plan completed"}
     return labels.get(progress, "In progress")
+    
 def build_report(user_id, data):
     lines = []
     lines.append("Ocean Legacy Challenge Report")
@@ -227,8 +228,9 @@ def build_report(user_id, data):
     lines.append("FINAL MESSAGE")
     lines.append(str(data.get("final_message", "")))
     return "\n".join(lines)
-    
-    def send_report_to_email(user_id, data):
+
+
+def send_report_to_email(user_id, data):
     sender = st.secrets["EMAIL_ADDRESS"]
     password = st.secrets["EMAIL_PASSWORD"]
     receiver = "Ezzat.bashour96@gmail.com"
