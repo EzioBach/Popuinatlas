@@ -25,7 +25,7 @@ what_changed = st.text_area("What changed in how you think about clothing during
 what_worked = st.text_area("What worked best for you?")
 what_hardest = st.text_area("What was hardest to change?")
 
-st.markdown("### Personal clothing rules")
+st.markdown("### Cognitive Restructuring & Personal Guidelines")
 rules = st.text_area(
     "Write 3–5 personal rules for future clothing decisions",
     placeholder="Example: I will wait 48 hours before any non-essential clothing purchase.",
