@@ -14,10 +14,10 @@ if not user_id:
     st.warning("Enter your Participant ID in the sidebar first.")
     st.stop()
 
-data = load_user(user_id)[cite: 5]
-if data["progress"] < 1:[cite: 5]
-    st.warning("Complete Week 1 first.")[cite: 5]
-    st.stop()[cite: 5]
+data = load_user(user_id)
+if data["progress"] < 1:
+    st.warning("Complete Week 1 first.")
+    st.stop()
 
 st.markdown("### Select Your Actions for Today")
 st.write("Browse the categories below and check off the interventions you successfully implemented.")
@@ -50,15 +50,15 @@ if st.button("💾 Log Daily Actions", type="primary", use_container_width=True)
         st.error("Please select at least 1 sustainable action to log today's progress.")
         st.stop()
 
-    data["progress"] = max(data["progress"], 2)[cite: 5]
+    data["progress"] = max(data["progress"], 2)
 
     for action_name in completed:
         data["actions"].append({
             "date": today(),
             "action": action_name,
             "completed": True
-        })[cite: 5]
+        })
 
-    save_user(user_id, data)[cite: 5]
+    save_user(user_id, data)
     st.success(f"Successfully logged {len(completed)} actions for today!")
     st.balloons()
