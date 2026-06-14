@@ -31,7 +31,7 @@ if data["progress"] < 2:
     st.warning("⏳ Access Denied: The 30-day intervention period is still ongoing. Please return at the end of the study.")
     st.stop()
 
-st.markdown("### Section A: T2 Psychological Re-Assessment")
+st.markdown("### Section A: T2 Re-Assessment")
 st.write("Please answer these questions again based on how you feel *right now*.")
 
 col1, col2 = st.columns(2)
