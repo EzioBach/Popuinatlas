@@ -68,6 +68,6 @@ else:
     st.info("Enter a Participant ID in the sidebar to unlock the full journey.")
 st.markdown("### Our team")
 st.markdown(
-    "<span class='team-pill'>Andrea . </span><span class='team-pill'> Ezzat . </span><span class='team-pill'>Leen . </span><span class='team-pill'>Maha .</span>",
+    "<span class='team-pill'>Andrea Andriamalala</span><span class='team-pill'>Ezzat Bachour</span><span class='team-pill'>Leen Ghafar</span><span class='team-pill'>Maha El kadiri</span>",
     unsafe_allow_html=True,
 )
