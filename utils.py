@@ -2,7 +2,9 @@ import json
 import sqlite3
 from datetime import date
 from pathlib import Path
-
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 import streamlit as st
 
 DB_DIR = Path("data")
