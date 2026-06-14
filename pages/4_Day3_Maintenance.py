@@ -123,3 +123,10 @@ if baseline:
     )
     fig.update_layout(template="plotly_dark")
     st.plotly_chart(fig, use_container_width=True)
+    
+    if st.button("Send full report to email"):
+    try:
+        send_report_to_email(user_id, data)
+        st.success("Report sent to your email.")
+    except Exception as e:
+        st.error(f"Email failed: {e}")
