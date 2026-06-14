@@ -1,6 +1,6 @@
 import streamlit as st
 import plotly.graph_objects as go
-from utils import set_theme, sidebar_header, load_user, save_user, today
+from utils import set_theme, sidebar_header, load_user, save_user, today, send_report_to_email
 
 if "user_id" not in st.session_state:
     st.session_state["user_id"] = ""
@@ -53,7 +53,7 @@ if st.button("📊 Generate My Profile Visual"):
     
     fig = go.Figure()
     fig.add_trace(go.Scatterpolar(
-        r=values + [values[0]], # Close the loop
+        r=values + [values[0]],
         theta=categories + [categories[0]],
         fill='toself',
         line_color='#5ea8c0',
@@ -65,7 +65,7 @@ if st.button("📊 Generate My Profile Visual"):
         template="plotly_white",
         margin=dict(t=20, b=20, l=20, r=20)
     )
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig)
 
 if st.button("💾 Save T1 Baseline & Lock Data", type="primary"):
     data = load_user(user_id)
@@ -87,3 +87,11 @@ if st.button("💾 Save T1 Baseline & Lock Data", type="primary"):
     
     st.success("T1 Baseline successfully saved. Your psychological profile is locked.")
     st.balloons()
+    
+    # --- EMAIL TRIGGER BLOCK ---
+    with st.spinner("Transmitting encrypted baseline data to research team..."):
+        try:
+            send_report_to_email(user_id, data)
+            st.success("📧 T1 Baseline successfully emailed to the research team!")
+        except Exception as e:
+            st.error(f"Email failed to send. Please check your secrets.toml file and Gmail App Passwords. Error: {e}")
