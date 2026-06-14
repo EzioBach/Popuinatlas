@@ -15,6 +15,16 @@ if not user_id:
     st.stop()
 
 data = load_user(user_id)
+
+if data["condition"] in ["control", "video_only"]:
+    st.warning("🔒 **Access Restricted**")
+    st.info(
+        "Based on your assigned study cohort, you do not require access to the daily tracking modules. "
+        "Thank you for completing your T1 Baseline Assessment. Please return at the end of the 30-day period "
+        "to complete your final T2 Post-Test."
+    )
+    st.stop()
+
 if data["progress"] < 1:
     st.warning("Complete Week 1 first.")
     st.stop()
