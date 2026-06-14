@@ -21,6 +21,15 @@ data = load_user(user_id)
 logs_df = pd.DataFrame(data["logs"]) if data["logs"] else pd.DataFrame()
 actions_df = pd.DataFrame(data["actions"]) if data["actions"] else pd.DataFrame()
 
+if data["condition"] in ["control", "video_only"]:
+    st.warning("🔒 **Access Restricted**")
+    st.info(
+        "Based on your assigned study cohort, you do not require access to the daily tracking modules. "
+        "Thank you for completing your T1 Baseline Assessment. Please return at the end of the 30-day period "
+        "to complete your final T2 Post-Test."
+    )
+    st.stop()
+
 # Overall Progress Bar
 st.markdown("### 30-Day Journey Progress")
 progress_val = (data["progress"] / 3)
