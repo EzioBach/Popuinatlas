@@ -1,11 +1,61 @@
 import streamlit as st
 from utils import set_theme, sidebar_header
 
+import streamlit as st
+from utils import set_theme, sidebar_header, load_user
+
 set_theme()
 user_id = sidebar_header()
 
 st.title("🌊 Ocean Legacy Challenge")
 st.caption("A psychology-based intervention for sustainable fashion behaviour")
+
+# Load user data to check condition (if logged in)
+data = load_user(user_id) if user_id else None
+
+# IF USER IS IN A VIDEO GROUP (Emotional Trigger)
+if data and data["condition"] in ["video_only", "full_intervention"]:
+    st.markdown(
+        """
+        <div class="hero-box">
+        <div style='display:flex;align-items:center;gap:18px;flex-wrap:wrap;'>
+            <div>
+            <h2>"When I am your age, what kind of ocean will I inherit?"</h2>
+            <p>
+            Please take a moment to reflect on this message from the future generation. 
+            This project helps university students reflect on fast-fashion behaviour and build 
+            habits that protect their future.
+            </p>
+            </div>
+        </div>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+# IF USER IS IN A NEUTRAL GROUP (Control / Challenge Only)
+elif data and data["condition"] in ["control", "challenge_only"]:
+    st.markdown(
+        """
+        <div class="hero-box">
+        <div style='display:flex;align-items:center;gap:18px;flex-wrap:wrap;'>
+            <div>
+            <h2>Textile Industry and Marine Environments</h2>
+            <p>
+            Standard sustainability metrics indicate that synthetic fibres and current production 
+            systems contribute heavily to marine pollution. This academic study analyzes 
+            clothing consumption patterns among university students.
+            </p>
+            </div>
+        </div>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+# IF NO USER ID ENTERED YET
+else:
+    st.info("👈 Please enter a Participant ID in the sidebar to begin.")
 
 st.markdown(
     """
