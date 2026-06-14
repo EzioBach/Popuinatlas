@@ -1,14 +1,17 @@
 import pandas as pd
 import plotly.express as px
+import plotly.graph_objects as go
 import streamlit as st
+from utils import set_theme, sidebar_header, load_user, save_user, today
 
-from utils import set_theme, sidebar_header, load_user, save_user, today, send_report_to_email
+if "user_id" not in st.session_state:
+    st.session_state["user_id"] = ""
 
 set_theme()
 user_id = sidebar_header()
 
-st.title("💙 Week 3 — Legacy Plan & Final Message")
-st.caption("Build long-term rules and close the challenge with responsibility")
+st.title("📝 T2 Post-Test & Program Completion")
+st.caption("Final evaluation of psychological shifts and behavioural changes.")
 
 if not user_id:
     st.warning("Enter your Participant ID in the sidebar first.")
@@ -16,121 +19,82 @@ if not user_id:
 
 data = load_user(user_id)
 
+# --- DEVELOPER TIME TRAVEL BYPASS ---
+with st.expander("🛠️ Evaluator / Professor Bypass"):
+    st.info("In a live RCT, this page unlocks 30 days after T1. Click below to bypass for grading purposes.")
+    if st.button("Unlock T2 Assessment"):
+        data["progress"] = 2
+        save_user(user_id, data)
+        st.rerun()
+
 if data["progress"] < 2:
-    st.warning("Complete week 2 first.")
+    st.warning("⏳ Access Denied: The 30-day intervention period is still ongoing. Please return at the end of the study.")
     st.stop()
 
-st.markdown("### Reflection")
-what_changed = st.text_area("What changed in how you think about clothing during this challenge?")
-what_worked = st.text_area("What worked best for you?")
-what_hardest = st.text_area("What was hardest to change?")
+st.markdown("### Section A: T2 Psychological Re-Assessment")
+st.write("Please answer these questions again based on how you feel *right now*.")
 
-st.markdown("### Cognitive Restructuring & Personal Guidelines")
-rules = st.text_area(
-    "Write 3–5 personal rules for future clothing decisions",
-    placeholder="Example: I will wait 48 hours before any non-essential clothing purchase.",
-)
+col1, col2 = st.columns(2)
+with col1:
+    t2_nature_conn = st.slider("1. I feel a deep emotional connection to marine ecosystems. (T2)", 1, 7, 4)
+    t2_future_gen = st.slider("2. I feel a moral obligation to protect the oceans for future generations. (T2)", 1, 7, 4)
+    t2_resp_feel = st.slider("3. My personal clothing choices directly impact ocean health. (T2)", 1, 7, 4)
 
-warning_signs = st.text_input(
-    "What are your early warning signs that you are slipping back into fast-fashion habits?"
-)
+with col2:
+    t2_autonomy = st.slider("4. I want to change my habits because it aligns with my personal values. (T2)", 1, 7, 4)
+    t2_competence = st.slider("5. I am confident I know how to find sustainable fashion alternatives. (T2)", 1, 7, 4)
+    t2_social_norm = st.slider("6. Most people my age care about sustainable fashion. (T2)", 1, 7, 4)
 
-recovery_plan = st.text_area(
-    "If you feel pressure to buy fast fashion again, what will you do instead?"
-)
-
-support_person = st.text_input(
-    "Who could support or remind you of your goal?"
-)
-
-st.markdown("### Post-challenge self-rating")
-post_fast_fashion_intent = st.slider(
-    "How likely are you now to buy fast fashion impulsively?",
-    1,
-    10,
-    4,
-)
-
-post_responsibility = st.slider(
-    "How responsible do you feel now for fashion's impact on the ocean?",
-    1,
-    10,
-    8,
-)
-
-post_commitment = st.slider(
-    "How committed are you to continuing these habits?",
-    1,
-    10,
-    8,
+st.markdown("### Section B: Final Behavioural Audit")
+t2_fast_fashion = st.number_input(
+    "How many newly produced garments did you purchase during this 30-day period?",
+    min_value=0, max_value=50, value=0
 )
 
 final_message = st.text_area(
-    "Write your final message to the child",
-    placeholder="Example: I cannot fix everything alone, but I can choose differently and protect your future ocean through my habits.",
+    "Final Legacy Message",
+    placeholder="Write a brief message to the next generation regarding the ocean..."
 )
 
-if st.button("Complete Program", use_container_width=True):
-    if not rules.strip() or not warning_signs.strip() or not final_message.strip():
-        st.error("Please complete your rules, warning signs, and final message.")
+if st.button("🏁 Submit T2 & View Results", type="primary", use_container_width=True):
+    if not final_message.strip():
+        st.error("Please complete your final message.")
         st.stop()
 
-    data = load_user(user_id)
     data["progress"] = 3
-    data["maintenance"] = {
-        "what_changed": what_changed,
-        "what_worked": what_worked,
-        "what_hardest": what_hardest,
-        "rules": rules,
-        "warning_signs": warning_signs,
-        "recovery_plan": recovery_plan,
-        "support_person": support_person,
-        "post_fast_fashion_intent": post_fast_fashion_intent,
-        "post_responsibility": post_responsibility,
-        "post_commitment": post_commitment,
-    }
     data["final_message"] = final_message
-
-    data["logs"].append({
-        "date": today(),
-        "phase": "day3_legacy",
-        "post_fast_fashion_intent": post_fast_fashion_intent,
-        "post_responsibility": post_responsibility,
-        "post_commitment": post_commitment,
-        "final_message": final_message,
-    })
-
+    
+    # Save T2 Data
+    data["maintenance"] = {
+        "t2_nature_conn": t2_nature_conn, "t2_future_gen": t2_future_gen,
+        "t2_resp_feel": t2_resp_feel, "t2_autonomy": t2_autonomy,
+        "t2_competence": t2_competence, "t2_social_norm": t2_social_norm,
+        "t2_fast_fashion": t2_fast_fashion
+    }
     save_user(user_id, data)
-    st.success("Program completed. Your Ocean Legacy has been recorded.")
+    st.success("Study Completed! Your data has been recorded.")
     st.balloons()
-    with st.spinner("Sending final report to the research team..."):
-        try:
-            send_report_to_email(user_id, data)
-            st.success("Report successfully sent to your email!")
-        except Exception as e:
-            st.error(f"Could not send the email report. Please check server logs. Error: {e}")
 
+    # --- PRE/POST COMPARISON GENERATION ---
     baseline = data.get("baseline", {})
     if baseline:
-        st.markdown("### Before vs after")
+        st.markdown("---")
+        st.markdown("### 📊 Your Psychological Shift (T1 vs T2)")
+        
         compare_df = pd.DataFrame({
-            "Metric": ["Ocean concern", "Commitment"],
-            "Before": [
-                baseline.get("ocean_concern", 0),
-                baseline.get("commitment", 0),
+            "Metric": ["Nature Conn.", "Future Gen Obligation", "Responsibility", "Competence"],
+            "T1 (Baseline)": [
+                baseline.get("nature_conn", 0), baseline.get("future_gen", 0),
+                baseline.get("resp_feel", 0), baseline.get("competence", 0)
             ],
-            "After": [
-                post_responsibility,
-                post_commitment,
-            ],
+            "T2 (Post-Test)": [
+                t2_nature_conn, t2_future_gen, t2_resp_feel, t2_competence
+            ]
         })
 
-        fig = px.bar(
-            compare_df,
-            x="Metric",
-            y=["Before", "After"],
-            barmode="group",
-            title="Pre/Post Comparison",
-        )
-        fig.update_layout(template="plotly_dark")
+        fig = go.Figure(data=[
+            go.Bar(name='T1 (Baseline)', x=compare_df['Metric'], y=compare_df['T1 (Baseline)'], marker_color='#78b7cb'),
+            go.Bar(name='T2 (Post-Test)', x=compare_df['Metric'], y=compare_df['T2 (Post-Test)'], marker_color='#173042')
+        ])
+        fig.update_layout(barmode='group', template="plotly_white", title="Pre and Post Intervention Comparison")
         st.plotly_chart(fig, use_container_width=True)
