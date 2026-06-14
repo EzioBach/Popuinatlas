@@ -11,7 +11,7 @@ st.markdown(
     """
     <div class="hero-box">
     <div style='display:flex;align-items:center;gap:18px;flex-wrap:wrap;'>
-            <img src='https://pplx-res.cloudinary.com/image/upload/pplx_search_images/ad174507961c5b77cb7fff0416b65da61a63cff3.jpg' width='120' style='border-radius:14px;border:1px solid rgba(255,255,255,0.2);'>
+            <img src='https://upload.wikimedia.org/wikipedia/commons/9/93/Leuphana_Universität_Lüneburg_Logo_2020.svg' width='120' style='border-radius:14px;border:1px solid rgba(255,255,255,0.2);'>
             <div>
         <h2>What kind of ocean will future generations inherit?</h2>
         <p>
