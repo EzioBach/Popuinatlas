@@ -1,5 +1,6 @@
 import json
 import sqlite3
+import random
 from datetime import date
 from pathlib import Path
 import smtplib
@@ -12,6 +13,7 @@ DB_DIR = Path("data")
 DB_PATH = DB_DIR / "users.db"
 
 DEFAULT_USER = {
+    "condition": None, 
     "progress": 0,
     "baseline": {},
     "logs": [],
@@ -37,12 +39,21 @@ def load_user(user_id: str):
     cur = conn.cursor()
     cur.execute("SELECT data FROM users WHERE id=?", (user_id,))
     row = cur.fetchone()
+    
     if row:
         data = json.loads(row[0])
         merged = DEFAULT_USER.copy()
         merged.update(data)
         return merged
-    return DEFAULT_USER.copy()
+    else:
+        # THE RANDOMIZER: If the user doesn't exist, assign them a condition immediately
+        new_user = DEFAULT_USER.copy()
+        conditions = ["control", "challenge_only", "video_only", "full_intervention"]
+        new_user["condition"] = random.choice(conditions)
+        
+        # Save it immediately so their condition is locked in forever
+        save_user(user_id, new_user)
+        return new_user
 
 
 def save_user(user_id: str, data: dict):
