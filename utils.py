@@ -141,7 +141,7 @@ def set_theme():
     </style>
     """,
     unsafe_allow_html=True,
-)
+  )
 
 
 def sidebar_header():
