@@ -1,7 +1,4 @@
 import streamlit as st
-from utils import set_theme, sidebar_header
-
-import streamlit as st
 from utils import set_theme, sidebar_header, load_user
 
 set_theme()
