@@ -250,19 +250,87 @@ def build_report(user_id, data):
     return "\n".join(lines)
 
 
-def send_report_to_email(user_id, data):
-    sender = st.secrets["EMAIL_ADDRESS"]
-    password = st.secrets["EMAIL_PASSWORD"]
-    receiver = "Ezzat.bashour96@gmail.com"
+def build_report(user_id, data):
+    lines = []
+    lines.append("🌊 OCEAN LEGACY CHALLENGE - DYNAMIC REPORT 🌊")
+    lines.append(f"Participant ID: {user_id}")
+    lines.append(f"Current Progress Stage: {data.get('progress', 0)} / 4")
+    lines.append(f"Assigned RCT Condition: {data.get('condition', 'Unknown')}")
+    lines.append("-" * 50)
+    
+    # --- STAGE 1: BASELINE ---
+    lines.append("\n[1] WEEK 1: BASELINE (T1)")
+    baseline = data.get("baseline", {})
+    if baseline:
+        for k, v in baseline.items():
+            lines.append(f"    • {k}: {v}")
+    else:
+        lines.append("    (Not completed yet)")
+    
+    # --- STAGE 2: COMMUNITY ---
+    lines.append("\n[2] WEEK 2: COMMUNITY & GOAL SETTING")
+    goal = data.get("community_goal", "")
+    if goal:
+        lines.append(f"    • Pledge: {goal}")
+    else:
+        lines.append("    (Not completed yet)")
+    
+    # --- STAGE 3: ACTIONS ---
+    lines.append("\n[3] WEEK 3: ACTION LOGS")
+    actions = data.get("actions", [])
+    if actions:
+        for a in actions:
+            # We exclude the 'image' key here so we don't flood the email with base64 text
+            action_name = a.get('action', 'Unknown action')
+            action_date = a.get('date', 'Unknown date')
+            lines.append(f"    • {action_date}: {action_name}")
+    else:
+        lines.append("    (No actions logged yet)")
+    
+    # --- STAGE 4: POST-TEST ---
+    lines.append("\n[4] WEEK 4: POST-TEST (T2) & LEGACY")
+    maintenance = data.get("maintenance", {})
+    if maintenance:
+        for k, v in maintenance.items():
+            lines.append(f"    • {k}: {v}")
+        lines.append(f"    • Final Legacy Message: {data.get('final_message', '')}")
+    else:
+        lines.append("    (Not completed yet)")
+    
+    # ==========================================
+    # DATA ANALYSIS (Only runs if T2 is done)
+    # ==========================================
+    if data.get("progress", 0) >= 4 and baseline and maintenance:
+        lines.append("\n" + "=" * 50)
+        lines.append("📊 AUTOMATED DATA ANALYSIS (T1 vs T2 SHIFTS)")
+        lines.append("=" * 50)
+        
+        # 1. Behavioral Shift
+        ff_t1 = baseline.get("fast_fashion_items", 0)
+        ff_t2 = maintenance.get("t2_fast_fashion", 0)
+        ff_diff = ff_t2 - ff_t1
+        trend = "Decrease 📉" if ff_diff < 0 else "Increase 📈" if ff_diff > 0 else "No Change ➖"
+        
+        lines.append("\nBEHAVIOURAL IMPACT:")
+        lines.append(f"    • Fast Fashion Purchases: {ff_t1} -> {ff_t2} ({trend}: {ff_diff})")
+        lines.append(f"    • Total Sustainable Interventions Executed: {len(actions)}")
+        
+        # 2. Psychological Shift
+        lines.append("\nPSYCHOLOGICAL SHIFTS (Scale 1-7):")
+        metrics = [
+            ("Nature Connection", "nature_conn", "t2_nature_conn"),
+            ("Future Gen Obligation", "future_gen", "t2_future_gen"),
+            ("Personal Responsibility", "resp_feel", "t2_resp_feel"),
+            ("Autonomous Motivation", "autonomy", "t2_autonomy"),
+            ("Perceived Competence", "competence", "t2_competence"),
+            ("Social Norms", "social_norm", "t2_social_norm")
+        ]
+        
+        for label, k1, k2 in metrics:
+            v1 = baseline.get(k1, 0)
+            v2 = maintenance.get(k2, 0)
+            shift = v2 - v1
+            shift_symbol = "(+)" if shift > 0 else "(-)" if shift < 0 else "(=)"
+            lines.append(f"    • {label}: {v1} -> {v2}  {shift_symbol} Shift: {shift}")
 
-    body = build_report(user_id, data)
-
-    msg = MIMEMultipart()
-    msg["From"] = sender
-    msg["To"] = receiver
-    msg["Subject"] = f"Ocean Legacy Challenge Report - {user_id}"
-    msg.attach(MIMEText(body, "plain"))
-
-    with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
-        server.login(sender, password)
-        server.send_message(msg)
+    return "\n".join(lines)
