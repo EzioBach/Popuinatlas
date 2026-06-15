@@ -34,7 +34,7 @@ actions_df = pd.DataFrame(data.get("actions", []))
 
 # Overall Progress Bar
 st.markdown("### 30-Day Journey Progress")
-progress_val = (data["progress"] / 3)
+progress_val = (data["progress"] / 4)
 st.progress(progress_val)
 st.caption(f"Current Status: **{progress_label(data['progress'])}**")
 
