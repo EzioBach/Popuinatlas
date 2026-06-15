@@ -217,7 +217,13 @@ def sidebar_header():
     return st.session_state["user_id"]
 
 def progress_label(progress):
-    labels = {0: "Not started", 1: "Week 1 (Awareness) Completed", 2: "Week 2 (Action) Completed", 3: "Week 3 (Legacy) Completed"}
+    labels = {
+        0: "Not started", 
+        1: "Week 1 (Baseline) completed", 
+        2: "Week 2 (Community) completed", 
+        3: "Week 3 (Action Phase) completed",
+        4: "Week 4 (Legacy Phase) completed"
+    }
     return labels.get(progress, "In progress")
     
 def build_report(user_id, data):
