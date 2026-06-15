@@ -1,6 +1,7 @@
 import streamlit as st
 import base64
-from utils import set_theme, sidebar_header, load_user, save_user, today, send_report_to_email
+from utils import set_theme, sidebar_header, load_user, save_user, today
+
 if "user_id" not in st.session_state:
     st.session_state["user_id"] = ""
 
@@ -98,11 +99,3 @@ if st.button("💾 Log Daily Actions & Upload", type="primary"):
     save_user(user_id, data)
     st.success(f"Successfully logged your progress for today!")
     st.balloons()
-    
-    # --- EMAIL TRIGGER BLOCK ---
-    with st.spinner("Transmitting data to research team..."):
-        try:
-            send_report_to_email(user_id, data)
-            st.success("📧 Progress successfully emailed to the research team!")
-        except Exception as e:
-            st.error(f"Email failed to send. Please check your secrets. Error: {e}")
