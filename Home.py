@@ -29,7 +29,7 @@ if data and data["condition"] in ["control", "video_only"]:
 if data and data["condition"] in ["video_only", "full_intervention"]:
     st.markdown("### A Message from the Future")
     # Replace this URL with your actual Child Video URL
-    st.video("https://www.youtube.com/watch?v=xFPoIU5iiYQ") 
+    st.video("https://youtu.be/hKFV9IquMXA?si=eSHt6GndnqaLb-gw") 
     
     st.markdown(
         """
