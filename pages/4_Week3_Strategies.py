@@ -1,6 +1,6 @@
 import streamlit as st
 import base64
-from utils import set_theme, sidebar_header, load_user, save_user, today
+from utils import set_theme, sidebar_header, load_user, save_user, today, build_report
 
 if "user_id" not in st.session_state:
     st.session_state["user_id"] = ""
