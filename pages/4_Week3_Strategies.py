@@ -18,16 +18,19 @@ if data and data.get("condition") in ["control", "video_only"]:
         "to complete your final T2 Post-Test."
     )
     st.stop()
+st.title("♻️ Week 3 — Action Follow-Up")
+st.caption("Time to check in on the goals you set last week.")
 
-st.title("♻️ Week 2 — Action Strategies")
-st.caption("Overcoming the intention-behaviour gap through concrete, high-impact interventions.")
+# --- THE CHECK-UP ---
+if "community_goal" in data and data["community_goal"]:
+    st.info(f"**Your Pledge from last week:** {data['community_goal']}")
 
 if not user_id:
     st.warning("Enter your Participant ID in the sidebar first.")
     st.stop()
 
-if data["progress"] < 1:
-    st.warning("Complete Week 1 first.")
+if data["progress"] < 2:
+    st.warning("Please complete Week 2 (Community & Goals) first.")
     st.stop()
 
 st.markdown("### Select Your Interventions for Today")
