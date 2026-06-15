@@ -70,7 +70,7 @@ if st.button("💾 Log Daily Actions & Upload", type="primary"):
         st.error("Please select at least 1 sustainable action or upload a photo to log today's progress.")
         st.stop()
 
-    data["progress"] = max(data["progress"], 2)
+    data["progress"] = max(data["progress"], 3)
 
     # Convert uploaded image to base64 string for database storage
     image_b64 = None
