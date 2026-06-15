@@ -2,7 +2,7 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
-from utils import set_theme, sidebar_header, load_user, save_user, today, send_report_to_email
+from utils import set_theme, sidebar_header, load_user, save_user, today, build_report
 
 if "user_id" not in st.session_state:
     st.session_state["user_id"] = ""
