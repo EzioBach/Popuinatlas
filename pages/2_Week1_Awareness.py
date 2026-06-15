@@ -1,6 +1,7 @@
 import streamlit as st
 import plotly.graph_objects as go
 from utils import set_theme, sidebar_header, load_user, save_user, today, send_report_to_email
+
 if "user_id" not in st.session_state:
     st.session_state["user_id"] = ""
 
@@ -88,10 +89,9 @@ if st.button("💾 Save T1 Baseline & Lock Data", type="primary"):
     st.balloons()
     
     # --- EMAIL TRIGGER BLOCK ---
-   # --- EMAIL TRIGGER BLOCK ---
-    with st.spinner("Transmitting data to research team..."):
+    with st.spinner("Transmitting encrypted baseline data to research team..."):
         try:
             send_report_to_email(user_id, data)
-            st.success("📧 Progress successfully emailed to the research team!")
+            st.success("📧 T1 Baseline successfully emailed to the research team!")
         except Exception as e:
-            st.error(f"Email failed to send. Please check your secrets. Error: {e}")
+            st.error(f"Email failed to send. Please check your secrets.toml file and Gmail App Passwords. Error: {e}")
