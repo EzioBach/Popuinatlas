@@ -8,7 +8,6 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import streamlit as st
 
-
 DB_DIR = Path("data")
 DB_PATH = DB_DIR / "users.db"
 
@@ -23,7 +22,6 @@ DEFAULT_USER = {
 }
 TEAM = ["Andrea Andriamalala", "Ezzat Bachour", "Leen Ghafar", "Maha El kadiri"]
 
-
 def ensure_db():
     DB_DIR.mkdir(parents=True, exist_ok=True)
     conn = sqlite3.connect(DB_PATH, check_same_thread=False)
@@ -32,7 +30,6 @@ def ensure_db():
     )
     conn.commit()
     return conn
-
 
 def load_user(user_id: str):
     conn = ensure_db()
@@ -50,146 +47,65 @@ def load_user(user_id: str):
         new_user = DEFAULT_USER.copy()
         conditions = ["control", "challenge_only", "video_only", "full_intervention"]
         new_user["condition"] = random.choice(conditions)
-        
-        # Save it immediately so their condition is locked in forever
         save_user(user_id, new_user)
         return new_user
-
 
 def save_user(user_id: str, data: dict):
     conn = ensure_db()
     conn.execute(
         "REPLACE INTO users (id, data) VALUES (?, ?)",
-        (user_id, json.dumps(data))
+        (user_id, json.dumps(data)),
     )
     conn.commit()
 
-
 def today():
-    return str(date.today())
-
+    return date.today().isoformat()
 
 def set_theme():
     st.set_page_config(
         page_title="Ocean Legacy Challenge",
         page_icon="🌊",
-        layout="wide"
+        layout="centered",
+        initial_sidebar_state="expanded",
     )
     st.markdown(
-    """
-    <style>
-    .stApp {
-        background: linear-gradient(180deg, #f4fbff 0%, #eaf6fb 40%, #dff1f6 100%);
-        color: #173042;
-    }
-
-    header[data-testid="stHeader"] {
-        background: rgba(244, 251, 255, 0.98);
-    }
-
-    .stApp > header {
-        background-color: rgba(244, 251, 255, 0.98);
-    }
-
-    [data-testid="stToolbar"] {
-        background: rgba(244, 251, 255, 0.98);
-    }
-
-    .main {
-        background: transparent;
-    }
-
-    .block-container {
-        padding-top: 2rem;
-        padding-bottom: 2rem;
-    }
-    </style>
-    """,
-    unsafe_allow_html=True,
-)
-    st.markdown(
-    """
-    <style>
-    .stApp {
-        background:
-            linear-gradient(180deg, #f4fbff 0%, #eaf6fb 40%, #dff1f6 100%);
-        color: #173042;
-    }
-
-    .main {
-        background: transparent;
-    }
-
-    .block-container {
-        padding-top: 2rem;
-        padding-bottom: 2rem;
-    }
-
-    h1, h2, h3, h4, h5, h6 {
-        color: #173042;
-    }
-
-    p, li, label, span, div {
-        color: #2d465a;
-    }
-
-    .hero-box {
-        background: rgba(255, 255, 255, 0.72);
-        border: 1px solid rgba(118, 168, 187, 0.22);
-        border-radius: 24px;
-        padding: 28px;
-        box-shadow: 0 10px 24px rgba(32, 70, 88, 0.08);
-        backdrop-filter: blur(6px);
-    }
-
-    .ocean-card {
-        background: rgba(255, 255, 255, 0.82);
-        border: 1px solid rgba(118, 168, 187, 0.18);
-        border-radius: 18px;
-        padding: 18px;
-        margin-bottom: 14px;
-        box-shadow: 0 8px 18px rgba(32, 70, 88, 0.06);
-    }
-
-    .team-pill {
-        display: inline-block;
-        padding: 0.35rem 0.7rem;
-        border-radius: 999px;
-        background: rgba(225, 242, 247, 0.95);
-        border: 1px solid rgba(118, 168, 187, 0.18);
-        font-size: 0.85rem;
-        margin-right: 0.4rem;
-        margin-bottom: 0.4rem;
-        color: #173042;
-    }
-
-    .stSidebar {
-        background: linear-gradient(180deg, #f8fcfe 0%, #edf8fb 100%);
-    }
-
-    [data-testid="stMetric"] {
-        background: rgba(255, 255, 255, 0.82);
-        border: 1px solid rgba(118, 168, 187, 0.16);
-        border-radius: 16px;
-        padding: 0.6rem 0.8rem;
-    }
-
-    .stButton > button {
-        background: linear-gradient(90deg, #78b7cb, #5ea8c0);
-        color: white;
-        border: none;
-        border-radius: 12px;
-    }
-
-    .stButton > button:hover {
-        background: linear-gradient(90deg, #6aaac0, #4f9db7);
-        color: white;
-    }
-    </style>
-    """,
-    unsafe_allow_html=True,
-)
-
+        """
+        <style>
+        [data-testid="stSidebar"] {
+            background-color: #173042;
+            color: white;
+        }
+        .team-pill {
+            background-color: rgba(255,255,255,0.1);
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            margin-right: 6px;
+            margin-bottom: 6px;
+            display: inline-block;
+        }
+        .ocean-card {
+            background-color: #f0f8fa;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 5px solid #5ea8c0;
+            margin-bottom: 20px;
+        }
+        .hero-box {
+            background: linear-gradient(135deg, #173042 0%, #2f667f 100%);
+            padding: 24px;
+            border-radius: 12px;
+            color: white;
+            margin-bottom: 24px;
+        }
+        .hero-box h2 {
+            color: white !important;
+            margin-top: 0;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
 
 def sidebar_header():
     st.sidebar.title("🌊 Ocean Legacy")
@@ -208,7 +124,6 @@ def sidebar_header():
 
     entered_id = st.sidebar.text_input("Participant ID", key="participant_id_input")
 
-    # Correctly indented validation check
     if not entered_id:
         st.sidebar.warning("Please enter a valid ID to save progress.")
     else:
@@ -225,30 +140,6 @@ def progress_label(progress):
         4: "Week 4 (Legacy Phase) completed"
     }
     return labels.get(progress, "In progress")
-    
-def build_report(user_id, data):
-    lines = []
-    lines.append("Ocean Legacy Challenge Report")
-    lines.append(f"Participant ID: {user_id}")
-    lines.append("")
-    lines.append("BASELINE")
-    lines.append(str(data.get("baseline", {})))
-    lines.append("")
-    lines.append("LOGS")
-    for item in data.get("logs", []):
-        lines.append(str(item))
-    lines.append("")
-    lines.append("ACTIONS")
-    for item in data.get("actions", []):
-        lines.append(str(item))
-    lines.append("")
-    lines.append("MAINTENANCE")
-    lines.append(str(data.get("maintenance", {})))
-    lines.append("")
-    lines.append("FINAL MESSAGE")
-    lines.append(str(data.get("final_message", "")))
-    return "\n".join(lines)
-
 
 def build_report(user_id, data):
     lines = []
@@ -280,7 +171,6 @@ def build_report(user_id, data):
     actions = data.get("actions", [])
     if actions:
         for a in actions:
-            # We exclude the 'image' key here so we don't flood the email with base64 text
             action_name = a.get('action', 'Unknown action')
             action_date = a.get('date', 'Unknown date')
             lines.append(f"    • {action_date}: {action_name}")
@@ -333,7 +223,7 @@ def build_report(user_id, data):
             shift_symbol = "(+)" if shift > 0 else "(-)" if shift < 0 else "(=)"
             lines.append(f"    • {label}: {v1} -> {v2}  {shift_symbol} Shift: {shift}")
 
-  return "\n".join(lines)
+    return "\n".join(lines)
 
 def send_report_to_email(user_id, data):
     # Fetch credentials from Streamlit Secrets
