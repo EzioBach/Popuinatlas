@@ -334,9 +334,6 @@ shift_symbol = "(+)" if shift > 0 else "(-)" if shift < 0 else "(=)"
 lines.append(f"    • {label}: {v1} -> {v2}  {shift_symbol} Shift: {shift}")
 
     return "\n".join(lines)
-    
-    def send_report_to_email(user_id, data):
-  return "\n".join(lines)
 
 def send_report_to_email(user_id, data):
 # Fetch credentials from Streamlit Secrets
