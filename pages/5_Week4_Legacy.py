@@ -75,13 +75,13 @@ if st.button("🏁 Submit T2 & Generate Report", type="primary"):
     st.success("Study Completed! Your data has been recorded.")
     st.balloons()
     
-    # --- EMAIL TRIGGER BLOCK ---
-    with st.spinner("Transmitting encrypted data to research team..."):
+# --- EMAIL TRIGGER BLOCK ---
+    with st.spinner("Transmitting data to research team..."):
         try:
             send_report_to_email(user_id, data)
-            st.success("📧 Data successfully emailed to the research team!")
+            st.success("📧 Progress successfully emailed to the research team!")
         except Exception as e:
-            st.error(f"Email failed to send. Please check your secrets.toml file and Gmail App Passwords. Error: {e}")
+            st.error(f"Email failed to send. Please check your secrets. Error: {e}")
 
     # --- PRE/POST COMPARISON GENERATION ---
     baseline = data.get("baseline", {})
