@@ -1,6 +1,5 @@
 import streamlit as st
-from utils import set_theme, sidebar_header, load_user, save_user, today, build_report
-
+from utils import set_theme, sidebar_header, load_user, save_user, today, send_report_to_email
 if "user_id" not in st.session_state:
     st.session_state["user_id"] = ""
 
