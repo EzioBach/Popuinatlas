@@ -8,12 +8,32 @@ if "user_id" not in st.session_state:
 set_theme()
 user_id = sidebar_header()
 
+data = load_user(user_id) if user_id else None
+
 st.title("📋 T1 Baseline Assessment")
 st.caption("Phase 1: Understanding current behaviours and psychological drivers")
 
 if not user_id:
     st.warning("Enter your Participant ID in the sidebar first.")
     st.stop()
+
+outfit_audit = {}
+if data and data.get("condition") == "full_intervention":
+    st.markdown("---")
+    st.markdown("### 👗 Challenge Task: The 7-Outfit Audit")
+    st.write("Since you are in the full challenge, let's start by auditing your existing abundance. Please describe 7 different outfits you can create from what you already own.")
+    
+    col_a, col_b = st.columns(2)
+    with col_a:
+        outfit_audit["Outfit 1"] = st.text_input("Outfit 1 description", placeholder="e.g., Blue jeans + white shirt")
+        outfit_audit["Outfit 2"] = st.text_input("Outfit 2 description")
+        outfit_audit["Outfit 3"] = st.text_input("Outfit 3 description")
+        outfit_audit["Outfit 4"] = st.text_input("Outfit 4 description")
+    with col_b:
+        outfit_audit["Outfit 5"] = st.text_input("Outfit 5 description")
+        outfit_audit["Outfit 6"] = st.text_input("Outfit 6 description")
+        outfit_audit["Outfit 7"] = st.text_input("Outfit 7 description")
+    st.markdown("---")
 
 st.markdown("### Section A: Psychological Assessment")
 st.write("Indicate your agreement (1 = Strongly Disagree, 7 = Strongly Agree).")
