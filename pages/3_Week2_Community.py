@@ -1,5 +1,6 @@
 import streamlit as st
 from utils import set_theme, sidebar_header, load_user, save_user, today, send_report_to_email
+
 if "user_id" not in st.session_state:
     st.session_state["user_id"] = ""
 
@@ -80,10 +81,8 @@ if st.button("💾 Lock in My Goal & Share with Cohort", type="primary"):
     st.success("Your goal is set! Check back in Week 3 to log your actual progress.")
     st.balloons()
 
- # --- EMAIL TRIGGER BLOCK ---
-    with st.spinner("Transmitting data to research team..."):
+    with st.spinner("Transmitting goal to research team..."):
         try:
             send_report_to_email(user_id, data)
-            st.success("📧 Progress successfully emailed to the research team!")
-        except Exception as e:
-            st.error(f"Email failed to send. Please check your secrets. Error: {e}")
+        except Exception:
+            pass # Fails silently for the user but keeps the app moving
