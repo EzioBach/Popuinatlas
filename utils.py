@@ -334,3 +334,30 @@ def build_report(user_id, data):
             lines.append(f"    • {label}: {v1} -> {v2}  {shift_symbol} Shift: {shift}")
 
     return "\n".join(lines)
+    
+    def send_report_to_email(user_id, data):
+    # Fetch credentials from Streamlit Secrets
+    sender = st.secrets["EMAIL_ADDRESS"]
+    password = st.secrets["EMAIL_PASSWORD"]
+    
+    # The email address where you want to RECEIVE the data
+    receiver = "Ezzat.bashour96@gmail.com" 
+
+    # Generate the text body using our new build_report function
+    body = build_report(user_id, data)
+
+    # Construct the email
+    msg = MIMEMultipart()
+    msg['From'] = sender
+    msg['To'] = receiver
+    msg['Subject'] = f"Ocean Legacy Challenge Data: Participant {user_id}"
+
+    msg.attach(MIMEText(body, 'plain', 'utf-8'))
+
+    # Connect to Gmail server and send
+    server = smtplib.SMTP('smtp.gmail.com', 587)
+    server.starttls()
+    server.login(sender, password)
+    text = msg.as_string()
+    server.sendmail(sender, receiver, text)
+    server.quit()
