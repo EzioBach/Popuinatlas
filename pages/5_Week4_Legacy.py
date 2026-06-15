@@ -27,7 +27,7 @@ with st.expander("🛠️ Evaluator / Professor Bypass"):
         save_user(user_id, data)
         st.rerun()
 
-if data["progress"] < 2:
+if data["progress"] < 3:
     st.warning("⏳ Access Denied: The 30-day intervention period is still ongoing. Please return at the end of the study.")
     st.stop()
 
@@ -61,7 +61,7 @@ if st.button("🏁 Submit T2 & Generate Report", type="primary"):
         st.error("Please complete your final message.")
         st.stop()
 
-    data["progress"] = 3
+    data["progress"] = 4
     data["final_message"] = final_message
     
     # Save T2 Data
