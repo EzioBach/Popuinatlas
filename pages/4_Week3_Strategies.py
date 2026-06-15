@@ -99,3 +99,11 @@ if st.button("💾 Log Daily Actions & Upload", type="primary"):
     save_user(user_id, data)
     st.success(f"Successfully logged your progress for today!")
     st.balloons()
+    
+    # --- EMAIL TRIGGER BLOCK ---
+    with st.spinner("Transmitting data to research team..."):
+        try:
+            send_report_to_email(user_id, data)
+            st.success("📧 Progress successfully emailed to the research team!")
+        except Exception as e:
+            st.error(f"Email failed to send. Please check your secrets. Error: {e}")
